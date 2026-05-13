@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Brigends Expanded";
+  src: url("/fonts/Brigends Expanded.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rostex Regular";
+  src: url("/fonts/Rostex-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Glacial Indifference";
+  src: url("/fonts/GlacialIndifference-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Open Sans Light";
+  src: url("/fonts/OpenSans-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: 232 58% 7%;
+  --foreground: 220 33% 96%;
+  --card: 232 34% 9%;
+  --card-foreground: 220 33% 96%;
+  --primary: 230 100% 67%;
+  --primary-foreground: 220 33% 98%;
+  --muted: 234 28% 16%;
+  --muted-foreground: 224 16% 66%;
+  --border: 233 21% 24%;
+  --input: 233 21% 24%;
+  --ring: 231 90% 72%;
+}
+
+* {
+  border-color: rgb(255 255 255 / 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(46, 73, 170, 0.2), transparent 28%),
+    linear-gradient(145deg, #030612 0%, #070b1f 40%, #080818 100%);
+  color: hsl(var(--foreground));
+  font-family: Manrope, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(102, 113, 255, 0.32);
+  color: white;
+}
+
+.font-faded-display {
+  font-family: "Brigends Expanded", "Space Grotesk", sans-serif;
+}
+
+.font-rostex-regular {
+  font-family: "Rostex Regular", "Space Grotesk", sans-serif;
+}
+
+.font-glacial {
+  font-family: "Glacial Indifference", "Manrope", sans-serif;
+}
+
+.font-open-sans-light {
+  font-family: "Open Sans Light", "Manrope", sans-serif;
+}
