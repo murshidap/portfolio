@@ -4,8 +4,8 @@ import { jsx, jsxs } from 'react/jsx-runtime';
 import { LogOut, Save, LoaderCircle, Upload, Plus, Trash2 } from 'lucide-react';
 import * as React from 'react';
 import { useState } from 'react';
-import { c as cn, d as defaultContent, B as Button, C as Card, f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout_DbZpIjNz.mjs';
-import { g as getAdminUserFromRequest } from '../chunks/auth_hH7cwaQS.mjs';
+import { c as cn, d as defaultContent, B as Button, C as Card, f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout_BDOZkNr3.mjs';
+import { g as getAdminUserFromRequest } from '../chunks/auth_4lUvT1K1.mjs';
 export { renderers } from '../renderers.mjs';
 
 const Input = React.forwardRef(

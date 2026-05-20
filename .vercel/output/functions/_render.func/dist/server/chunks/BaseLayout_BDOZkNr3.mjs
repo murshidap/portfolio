@@ -3,7 +3,7 @@ import * as React from 'react';
 import { cva } from 'class-variance-authority';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { a as getServiceSupabase, c as getPublicServerSupabase } from './auth_hH7cwaQS.mjs';
+import { a as getServiceSupabase, d as getPublicServerSupabase } from './auth_4lUvT1K1.mjs';
 import { e as createComponent, g as addAttribute, l as renderHead, n as renderSlot, r as renderTemplate, h as createAstro } from './astro/server_y1XpGNYX.mjs';
 import 'piccolore';
 /* empty css                         */

@@ -1,426 +1,11 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_y1XpGNYX.mjs';
 import 'piccolore';
-import { jsx, jsxs } from 'react/jsx-runtime';
-import { useReducedMotion, motion, AnimatePresence } from 'framer-motion';
-import { ArrowUpRight, Phone, Mail } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
-import { C as Card, c as cn, B as Button, f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout_DbZpIjNz.mjs';
+import { jsxs, jsx } from 'react/jsx-runtime';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowUpRight, Mail, Share2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { c as cn, B as Button, C as Card, f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout_BDOZkNr3.mjs';
 export { renderers } from '../renderers.mjs';
-
-const WIDGET_TITLE = "One thing I'm also enthusiastic about is stars!";
-const WIDGET_SUBTITLE = "How about we explore some star constellations?";
-const CONSTELLATIONS = [
-  {
-    id: "orion",
-    name: "Orion",
-    description: "Famous for its central belt of three bright stars!",
-    stars: [
-      { id: "A", x: 28, y: 14 },
-      { id: "B", x: 18, y: 36 },
-      { id: "C", x: 48, y: 26 },
-      { id: "D", x: 58, y: 50 },
-      { id: "E", x: 52, y: 60 },
-      { id: "F", x: 52, y: 88 },
-      { id: "G", x: 86, y: 68 },
-      { id: "H", x: 64, y: 46 }
-    ],
-    connections: [
-      ["A", "B"],
-      ["A", "C"],
-      ["B", "E"],
-      ["C", "H"],
-      ["H", "D"],
-      ["D", "E"],
-      ["E", "F"],
-      ["E", "G"],
-      ["F", "G"]
-    ]
-  },
-  {
-    id: "taurus",
-    name: "Taurus",
-    description: "Its V-shaped face and long horns make it easy to recognize.",
-    stars: [
-      { id: "A", x: 16, y: 38 },
-      { id: "B", x: 28, y: 48 },
-      { id: "C", x: 44, y: 48 },
-      { id: "D", x: 56, y: 34 },
-      { id: "E", x: 70, y: 18 },
-      { id: "F", x: 82, y: 12 },
-      { id: "G", x: 72, y: 30 },
-      { id: "H", x: 58, y: 60 },
-      { id: "I", x: 52, y: 74 }
-    ],
-    connections: [
-      ["A", "B"],
-      ["B", "C"],
-      ["C", "D"],
-      ["D", "E"],
-      ["E", "F"],
-      ["E", "G"],
-      ["D", "H"],
-      ["H", "I"]
-    ]
-  },
-  {
-    id: "ursa-major",
-    name: "Ursa Major",
-    description: "Its Big Dipper asterism is one of the easiest shapes to spot.",
-    stars: [
-      { id: "A", x: 18, y: 40 },
-      { id: "B", x: 30, y: 26 },
-      { id: "C", x: 42, y: 44 },
-      { id: "D", x: 28, y: 58 },
-      { id: "E", x: 56, y: 40 },
-      { id: "F", x: 70, y: 36 },
-      { id: "G", x: 84, y: 30 }
-    ],
-    connections: [
-      ["A", "B"],
-      ["B", "C"],
-      ["C", "D"],
-      ["D", "A"],
-      ["C", "E"],
-      ["E", "F"],
-      ["F", "G"]
-    ]
-  },
-  {
-    id: "cassiopeia",
-    name: "Cassiopeia",
-    description: "Recognizable for its graceful W-shaped zigzag across the sky.",
-    stars: [
-      { id: "A", x: 14, y: 18 },
-      { id: "B", x: 30, y: 38 },
-      { id: "C", x: 48, y: 36 },
-      { id: "D", x: 66, y: 60 },
-      { id: "E", x: 84, y: 34 }
-    ],
-    connections: [
-      ["A", "B"],
-      ["B", "C"],
-      ["C", "D"],
-      ["D", "E"]
-    ]
-  },
-  {
-    id: "leo",
-    name: "Leo",
-    description: "This lion-like outline is anchored by the sickle near its head.",
-    stars: [
-      { id: "A", x: 12, y: 72 },
-      { id: "B", x: 32, y: 44 },
-      { id: "C", x: 36, y: 72 },
-      { id: "D", x: 66, y: 40 },
-      { id: "E", x: 72, y: 22 },
-      { id: "F", x: 90, y: 10 },
-      { id: "G", x: 96, y: 18 },
-      { id: "H", x: 80, y: 54 },
-      { id: "I", x: 80, y: 72 }
-    ],
-    connections: [
-      ["A", "B"],
-      ["A", "C"],
-      ["B", "C"],
-      ["B", "D"],
-      ["C", "I"],
-      ["D", "E"],
-      ["E", "F"],
-      ["F", "G"],
-      ["D", "H"],
-      ["H", "I"]
-    ]
-  },
-  {
-    id: "scorpius",
-    name: "Scorpius",
-    description: "Its long curving tail gives this constellation a dramatic silhouette.",
-    stars: [
-      { id: "A", x: 12, y: 70 },
-      { id: "B", x: 20, y: 58 },
-      { id: "C", x: 28, y: 70 },
-      { id: "D", x: 44, y: 70 },
-      { id: "E", x: 58, y: 66 },
-      { id: "F", x: 60, y: 44 },
-      { id: "G", x: 68, y: 22 },
-      { id: "H", x: 76, y: 16 },
-      { id: "I", x: 86, y: 10 },
-      { id: "J", x: 88, y: 20 },
-      { id: "K", x: 98, y: 14 }
-    ],
-    connections: [
-      ["A", "B"],
-      ["B", "C"],
-      ["C", "D"],
-      ["D", "E"],
-      ["E", "F"],
-      ["F", "G"],
-      ["G", "H"],
-      ["H", "I"],
-      ["H", "J"],
-      ["H", "K"]
-    ]
-  },
-  {
-    id: "andromeda",
-    name: "Andromeda",
-    description: "A long chained line of stars that drifts elegantly across the sky.",
-    stars: [
-      { id: "A", x: 30, y: 12 },
-      { id: "B", x: 18, y: 30 },
-      { id: "C", x: 44, y: 40 },
-      { id: "D", x: 48, y: 52 },
-      { id: "E", x: 44, y: 64 },
-      { id: "F", x: 56, y: 58 },
-      { id: "G", x: 60, y: 48 },
-      { id: "H", x: 64, y: 40 },
-      { id: "I", x: 72, y: 60 },
-      { id: "J", x: 90, y: 84 }
-    ],
-    connections: [
-      ["A", "C"],
-      ["B", "E"],
-      ["C", "D"],
-      ["D", "E"],
-      ["D", "F"],
-      ["F", "G"],
-      ["G", "H"],
-      ["F", "I"],
-      ["I", "J"]
-    ]
-  }
-];
-function normalizeConnection(a, b) {
-  return [a, b].sort().join("__");
-}
-function findStar(stars, id) {
-  return stars.find((star) => star.id === id);
-}
-function starDelay(id) {
-  return id.charCodeAt(0) % 7 * 0.35;
-}
-function ConstellationWidget() {
-  const prefersReducedMotion = useReducedMotion();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedStar, setSelectedStar] = useState(null);
-  const [userConnections, setUserConnections] = useState([]);
-  const [isFadingOut, setIsFadingOut] = useState(false);
-  const constellation = CONSTELLATIONS[currentIndex];
-  const correctConnections = useMemo(
-    () => constellation.connections.map(([from, to]) => normalizeConnection(from, to)),
-    [constellation]
-  );
-  const isComplete = useMemo(() => {
-    if (userConnections.length !== correctConnections.length) {
-      return false;
-    }
-    return userConnections.every((connection) => correctConnections.includes(connection));
-  }, [correctConnections, userConnections]);
-  useEffect(() => {
-    if (!isComplete) {
-      setIsFadingOut(false);
-      return;
-    }
-    const fadeDelay = prefersReducedMotion ? 900 : 1400;
-    const advanceDelay = prefersReducedMotion ? 1250 : 2150;
-    const fadeTimer = window.setTimeout(() => {
-      setIsFadingOut(true);
-    }, fadeDelay);
-    const nextTimer = window.setTimeout(() => {
-      setCurrentIndex((previous) => (previous + 1) % CONSTELLATIONS.length);
-      setSelectedStar(null);
-      setUserConnections([]);
-      setIsFadingOut(false);
-    }, advanceDelay);
-    return () => {
-      window.clearTimeout(fadeTimer);
-      window.clearTimeout(nextTimer);
-    };
-  }, [isComplete, prefersReducedMotion]);
-  const handleStarSelect = (starId) => {
-    if (isComplete || isFadingOut) {
-      return;
-    }
-    if (selectedStar === null) {
-      setSelectedStar(starId);
-      return;
-    }
-    if (selectedStar === starId) {
-      setSelectedStar(null);
-      return;
-    }
-    const connectionKey = normalizeConnection(selectedStar, starId);
-    setUserConnections(
-      (previous) => previous.includes(connectionKey) ? previous.filter((connection) => connection !== connectionKey) : [...previous, connectionKey]
-    );
-    setSelectedStar(starId);
-  };
-  return /* @__PURE__ */ jsx(
-    motion.div,
-    {
-      animate: { opacity: 1, y: 0 },
-      className: "w-full max-w-[360px]",
-      initial: { opacity: 0, y: prefersReducedMotion ? 0 : 16 },
-      transition: { duration: 0.45, ease: "easeOut" },
-      children: /* @__PURE__ */ jsxs(Card, { className: "relative overflow-hidden border-white/12 bg-[linear-gradient(180deg,rgba(10,14,34,0.84),rgba(7,9,22,0.72))] p-4 shadow-[0_24px_80px_rgba(4,8,24,0.45)] md:p-5", children: [
-        /* @__PURE__ */ jsx("div", { className: "pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(116,104,255,0.15),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(78,119,255,0.14),transparent_38%)]" }),
-        /* @__PURE__ */ jsxs("div", { className: "relative z-10", children: [
-          /* @__PURE__ */ jsxs("div", { className: "mb-4 space-y-1", children: [
-            /* @__PURE__ */ jsx("p", { className: "font-open-sans-light text-[0.68rem] uppercase tracking-[0.22em] text-[#98a0c4]/72", children: "starfield note" }),
-            /* @__PURE__ */ jsx("h3", { className: "max-w-[20rem] font-display text-[0.98rem] leading-6 text-white/86 md:text-[1.05rem]", children: WIDGET_TITLE }),
-            /* @__PURE__ */ jsx("p", { className: "font-open-sans-light text-[0.82rem] leading-5 text-[#aeb7cf]/58", children: WIDGET_SUBTITLE })
-          ] }),
-          /* @__PURE__ */ jsx(
-            motion.div,
-            {
-              animate: isComplete && !prefersReducedMotion ? {
-                boxShadow: [
-                  "0 0 0 rgba(118,116,255,0)",
-                  "0 0 34px rgba(118,116,255,0.18)",
-                  "0 0 0 rgba(118,116,255,0)"
-                ]
-              } : { boxShadow: "0 0 0 rgba(118,116,255,0)" },
-              className: cn(
-                "relative rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0.01))] px-3 py-3",
-                isComplete ? "border-[#8688ff]/30" : "border-white/8"
-              ),
-              children: /* @__PURE__ */ jsx(AnimatePresence, { mode: "wait", children: /* @__PURE__ */ jsxs(
-                motion.div,
-                {
-                  animate: { opacity: isFadingOut ? 0 : 1, scale: isFadingOut ? 0.985 : 1 },
-                  className: "relative h-[230px] w-full",
-                  initial: { opacity: 0, scale: prefersReducedMotion ? 1 : 0.985 },
-                  transition: { duration: prefersReducedMotion ? 0.2 : 0.45, ease: "easeOut" },
-                  children: [
-                    /* @__PURE__ */ jsx(
-                      "svg",
-                      {
-                        "aria-hidden": "true",
-                        className: "absolute inset-0 h-full w-full overflow-visible",
-                        preserveAspectRatio: "none",
-                        viewBox: "0 0 100 100",
-                        children: userConnections.map((connection) => {
-                          const [fromId, toId] = connection.split("__");
-                          const fromStar = findStar(constellation.stars, fromId);
-                          const toStar = findStar(constellation.stars, toId);
-                          if (!fromStar || !toStar) {
-                            return null;
-                          }
-                          const isCorrect = correctConnections.includes(connection);
-                          return /* @__PURE__ */ jsx(
-                            motion.line,
-                            {
-                              animate: isComplete && !prefersReducedMotion ? { opacity: [0.8, 1, 0.84] } : { opacity: isCorrect ? 0.9 : 0.62 },
-                              initial: { opacity: 0 },
-                              stroke: isCorrect ? "rgba(158, 182, 255, 0.96)" : "rgba(132, 118, 232, 0.68)",
-                              strokeLinecap: "round",
-                              strokeWidth: "1.35",
-                              style: {
-                                filter: isCorrect ? "drop-shadow(0 0 10px rgba(111,149,255,0.95))" : "drop-shadow(0 0 7px rgba(132,118,232,0.58))"
-                              },
-                              transition: { duration: prefersReducedMotion ? 0.12 : 0.22, ease: "easeOut" },
-                              vectorEffect: "non-scaling-stroke",
-                              x1: fromStar.x,
-                              x2: toStar.x,
-                              y1: fromStar.y,
-                              y2: toStar.y
-                            },
-                            connection
-                          );
-                        })
-                      }
-                    ),
-                    constellation.stars.map((star) => {
-                      const isSelected = selectedStar === star.id;
-                      return /* @__PURE__ */ jsxs(
-                        motion.button,
-                        {
-                          animate: prefersReducedMotion ? { opacity: 1, scale: isSelected ? 1.08 : 1 } : {
-                            opacity: isComplete ? [0.9, 1, 0.92] : [0.82, 1, 0.84],
-                            scale: isSelected ? 1.18 : [1, 1.08, 1]
-                          },
-                          "aria-label": `Select star ${star.id} in ${constellation.name}`,
-                          className: "absolute -translate-x-1/2 -translate-y-1/2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8b8dff]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090d1f]",
-                          onClick: () => handleStarSelect(star.id),
-                          style: { left: `${star.x}%`, top: `${star.y}%` },
-                          transition: {
-                            duration: prefersReducedMotion ? 0.16 : 2.2,
-                            ease: "easeInOut",
-                            repeat: prefersReducedMotion ? 0 : Number.POSITIVE_INFINITY,
-                            delay: prefersReducedMotion ? 0 : starDelay(star.id)
-                          },
-                          type: "button",
-                          children: [
-                            /* @__PURE__ */ jsx(
-                              "span",
-                              {
-                                className: cn(
-                                  "absolute inset-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full",
-                                  isSelected ? "bg-[#9ca7ff]/16" : "bg-transparent"
-                                )
-                              }
-                            ),
-                            /* @__PURE__ */ jsx(
-                              "span",
-                              {
-                                className: cn(
-                                  "absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border",
-                                  isSelected ? "h-4 w-4 border-[#bcc6ff]/75" : "h-0 w-0 border-transparent"
-                                )
-                              }
-                            ),
-                            /* @__PURE__ */ jsx(
-                              "span",
-                              {
-                                className: cn(
-                                  "relative block rounded-full",
-                                  isSelected ? "h-[0.56rem] w-[0.56rem] bg-[#eef3ff] shadow-[0_0_16px_rgba(161,184,255,1)]" : "h-[0.42rem] w-[0.42rem] bg-[#eef2ff] shadow-[0_0_12px_rgba(126,162,255,0.9)]"
-                                )
-                              }
-                            )
-                          ]
-                        },
-                        star.id
-                      );
-                    })
-                  ]
-                },
-                constellation.id
-              ) })
-            }
-          ),
-          /* @__PURE__ */ jsx("div", { className: "mt-4 min-h-[2.75rem]", children: /* @__PURE__ */ jsx(AnimatePresence, { mode: "wait", children: isComplete ? /* @__PURE__ */ jsxs(
-            motion.div,
-            {
-              animate: { opacity: 1, y: 0 },
-              initial: { opacity: 0, y: 8 },
-              transition: { duration: prefersReducedMotion ? 0.18 : 0.35, ease: "easeOut" },
-              children: [
-                /* @__PURE__ */ jsx("p", { className: "font-display text-[0.84rem] tracking-[0.1em] text-[#b7c1ff]", children: constellation.name }),
-                /* @__PURE__ */ jsx("p", { className: "mt-1 font-open-sans-light text-[0.8rem] leading-5 text-[#c8d0e3]/68", children: constellation.description })
-              ]
-            },
-            constellation.id + "-complete"
-          ) : /* @__PURE__ */ jsxs(
-            motion.p,
-            {
-              animate: { opacity: 1 },
-              className: "font-open-sans-light text-[0.76rem] leading-5 text-[#aeb7cf]/42",
-              initial: { opacity: 0 },
-              transition: { duration: prefersReducedMotion ? 0.12 : 0.28 },
-              children: [
-                "Connect the stars to reveal ",
-                constellation.name,
-                "."
-              ]
-            },
-            constellation.id + "-hint"
-          ) }) })
-        ] })
-      ] })
-    }
-  );
-}
 
 const views = [
   { key: "home", label: "Home" },
@@ -444,21 +29,40 @@ function SocialLinks({ content, className = "" }) {
   const items = [
     { href: content.github_url, label: "GitHub", icon: /* @__PURE__ */ jsx(GithubIcon, {}) },
     { href: content.linkedin_url, label: "LinkedIn", icon: /* @__PURE__ */ jsx(LinkedInIcon, {}) },
-    { href: `tel:${content.phone}`, label: "Call", icon: /* @__PURE__ */ jsx(Phone, { className: "h-5 w-5" }) },
     { href: `mailto:${content.email}`, label: "Email", icon: /* @__PURE__ */ jsx(Mail, { className: "h-5 w-5" }) }
   ];
-  return /* @__PURE__ */ jsx("div", { className, children: items.map((item) => /* @__PURE__ */ jsx(
-    "a",
-    {
-      "aria-label": item.label,
-      className: "text-white/65 transition hover:text-white",
-      href: item.href,
-      rel: "noreferrer",
-      target: item.href.startsWith("http") ? "_blank" : void 0,
-      children: item.icon
-    },
-    item.label
-  )) });
+  return /* @__PURE__ */ jsxs("div", { className, children: [
+    items.map((item) => /* @__PURE__ */ jsx(
+      "a",
+      {
+        "aria-label": item.label,
+        className: "text-white/65 transition hover:text-white",
+        href: item.href,
+        rel: "noreferrer",
+        target: item.href.startsWith("http") ? "_blank" : void 0,
+        children: item.icon
+      },
+      item.label
+    )),
+    /* @__PURE__ */ jsx(
+      "button",
+      {
+        "aria-label": "Copy website address",
+        className: "text-white/65 transition hover:text-white",
+        onClick: async () => {
+          if (typeof window === "undefined") {
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+          } catch {
+          }
+        },
+        type: "button",
+        children: /* @__PURE__ */ jsx(Share2, { className: "h-5 w-5" })
+      }
+    )
+  ] });
 }
 function FullSection({ title, children }) {
   return /* @__PURE__ */ jsxs("section", { className: "mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center py-10", children: [
@@ -596,8 +200,7 @@ function PortfolioApp({ initialContent }) {
                 /* @__PURE__ */ jsx("p", { className: "font-open-sans-light mt-3 max-w-[280px] text-[0.82rem] font-light leading-6 tracking-[0.04em] text-[#9ca5bb]/32 md:max-w-[320px] md:text-[0.88rem] lg:max-w-[340px]", children: content.intro.intro })
               ] }),
               /* @__PURE__ */ jsx(SocialLinks, { className: "mt-10 flex flex-wrap gap-4 lg:hidden", content: content.intro })
-            ] }),
-            /* @__PURE__ */ jsx("div", { className: "order-4 relative z-20 mt-8 flex justify-end lg:absolute lg:bottom-6 lg:right-8 lg:mt-0 xl:bottom-10 xl:right-14", children: /* @__PURE__ */ jsx(ConstellationWidget, {}) })
+            ] })
           ]
         },
         "home"

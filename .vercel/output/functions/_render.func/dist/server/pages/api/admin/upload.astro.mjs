@@ -1,4 +1,4 @@
-import { g as getAdminUserFromRequest, a as getServiceSupabase } from '../../../chunks/auth_hH7cwaQS.mjs';
+import { g as getAdminUserFromRequest, a as getServiceSupabase } from '../../../chunks/auth_4lUvT1K1.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const POST = async ({ request }) => {

@@ -1,4 +1,4 @@
-import { A as ADMIN_ACCESS_COOKIE, b as ADMIN_REFRESH_COOKIE, c as getPublicServerSupabase } from '../../../chunks/auth_hH7cwaQS.mjs';
+import { b as getMissingSupabaseEnvVars, A as ADMIN_ACCESS_COOKIE, c as ADMIN_REFRESH_COOKIE, d as getPublicServerSupabase } from '../../../chunks/auth_4lUvT1K1.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const adminUsername = "murshida-admin";
@@ -6,7 +6,12 @@ const adminEmail = "admin@example.com";
 const POST = async ({ request, cookies }) => {
   const supabase = getPublicServerSupabase();
   if (!supabase) {
-    return new Response(JSON.stringify({ error: "Supabase environment variables are missing." }), { status: 500 });
+    return new Response(
+      JSON.stringify({
+        error: `Supabase environment variables are missing: ${getMissingSupabaseEnvVars().join(", ")}`
+      }),
+      { status: 500 }
+    );
   }
   const { username, password } = await request.json();
   if (String(username).trim() !== adminUsername) {

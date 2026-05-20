@@ -33,5 +33,15 @@ function readCookie(cookieHeader, name) {
   }
   return decodeURIComponent(cookie.slice(name.length + 1));
 }
+function getMissingSupabaseEnvVars() {
+  const missing = [];
+  {
+    missing.push("PUBLIC_SUPABASE_URL");
+  }
+  {
+    missing.push("PUBLIC_SUPABASE_ANON_KEY");
+  }
+  return missing;
+}
 
-export { ADMIN_ACCESS_COOKIE as A, getServiceSupabase as a, ADMIN_REFRESH_COOKIE as b, getPublicServerSupabase as c, getAdminUserFromRequest as g };
+export { ADMIN_ACCESS_COOKIE as A, getServiceSupabase as a, getMissingSupabaseEnvVars as b, ADMIN_REFRESH_COOKIE as c, getPublicServerSupabase as d, getAdminUserFromRequest as g };
