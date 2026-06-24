@@ -3,10 +3,10 @@ import * as React from 'react';
 import { cva } from 'class-variance-authority';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { a as getServiceSupabase, d as getPublicServerSupabase } from './auth_4lUvT1K1.mjs';
+import { a as getServiceSupabase, c as getPublicServerSupabase } from './auth_hH7cwaQS.mjs';
 import { e as createComponent, g as addAttribute, l as renderHead, n as renderSlot, r as renderTemplate, h as createAstro } from './astro/server_y1XpGNYX.mjs';
 import 'piccolore';
-/* empty css                         */
+/* empty css                                  */
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -17,7 +17,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "border border-white/10 bg-[linear-gradient(90deg,rgba(61,103,255,0.95),rgba(119,85,255,0.4))] text-white shadow-glow hover:scale-[1.02]",
+        primary: "theme-button-primary border text-white hover:scale-[1.02]",
         secondary: "border border-white/15 bg-white/[0.03] text-white/88 hover:border-white/30 hover:bg-white/[0.06]",
         ghost: "text-white/70 hover:text-white"
       },
@@ -45,7 +45,7 @@ function Card({ className, ...props }) {
     "div",
     {
       className: cn(
-        "rounded-[28px] border border-white/10 bg-white/[0.04] shadow-panel backdrop-blur-2xl",
+        "theme-card rounded-[28px] border backdrop-blur-2xl",
         className
       ),
       ...props

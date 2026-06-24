@@ -34,6 +34,126 @@
   font-display: swap;
 }
 
+@property --theme-base {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #030612;
+}
+
+@property --theme-surface {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #070b1f;
+}
+
+@property --theme-elevated {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #11183b;
+}
+
+@property --theme-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #4e77ff;
+}
+
+@property --theme-accent-soft {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #8d73ff;
+}
+
+@property --theme-nav-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #8d73ff;
+}
+
+@property --theme-button-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #6671ff;
+}
+
+@property --theme-accent-text {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #b7c1ff;
+}
+
+@property --theme-card-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 255, 255, 0.04);
+}
+
+@property --theme-card-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(141, 115, 255, 0.16);
+}
+
+@property --theme-glass-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 255, 255, 0.05);
+}
+
+@property --theme-glass-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 255, 255, 0.1);
+}
+
+@property --theme-button-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(141, 115, 255, 0.18);
+}
+
+@property --theme-muted-text {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(201, 210, 232, 0.72);
+}
+
+@property --theme-soft-copy {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(174, 183, 207, 0.58);
+}
+
+@property --theme-faint-copy {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(186, 196, 220, 0.58);
+}
+
+@property --theme-node-glow {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(141, 115, 255, 0.92);
+}
+
+@property --theme-node-active-glow {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(78, 119, 255, 1);
+}
+
+@property --theme-tooltip-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(7, 11, 31, 0.86);
+}
+
+@property --theme-tooltip-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(141, 115, 255, 0.22);
+}
+
 :root {
   --background: 232 58% 7%;
   --foreground: 220 33% 96%;
@@ -46,6 +166,33 @@
   --border: 233 21% 24%;
   --input: 233 21% 24%;
   --ring: 231 90% 72%;
+  --theme-base: #030612;
+  --theme-surface: #070b1f;
+  --theme-elevated: #11183b;
+  --theme-accent: #4e77ff;
+  --theme-accent-soft: #8d73ff;
+  --theme-nav-accent: #8d73ff;
+  --theme-button-accent: #6671ff;
+  --theme-accent-text: #b7c1ff;
+  --theme-card-bg: rgba(255, 255, 255, 0.04);
+  --theme-card-border: rgba(141, 115, 255, 0.16);
+  --theme-glass-bg: rgba(255, 255, 255, 0.05);
+  --theme-glass-border: rgba(255, 255, 255, 0.1);
+  --theme-panel-shadow: 0 24px 80px rgba(7, 10, 30, 0.5);
+  --theme-glow-shadow: 0 0 30px rgba(88, 107, 255, 0.35);
+  --theme-button-gradient: linear-gradient(90deg, rgba(78, 119, 255, 0.95), rgba(141, 115, 255, 0.42));
+  --theme-button-border: rgba(141, 115, 255, 0.18);
+  --theme-muted-text: rgba(201, 210, 232, 0.72);
+  --theme-soft-copy: rgba(174, 183, 207, 0.58);
+  --theme-faint-copy: rgba(186, 196, 220, 0.58);
+  --theme-line: rgba(141, 115, 255, 0.34);
+  --theme-line-strong: rgba(141, 115, 255, 0.7);
+  --theme-node: #f3f7ff;
+  --theme-node-glow: rgba(141, 115, 255, 0.92);
+  --theme-node-active-glow: rgba(78, 119, 255, 1);
+  --theme-tooltip-bg: rgba(7, 11, 31, 0.86);
+  --theme-tooltip-border: rgba(141, 115, 255, 0.22);
+  --theme-transition-duration: 820ms;
 }
 
 * {
@@ -60,10 +207,31 @@ body {
   margin: 0;
   min-width: 320px;
   background:
-    radial-gradient(circle at 50% 20%, rgba(46, 73, 170, 0.2), transparent 28%),
-    linear-gradient(145deg, #030612 0%, #070b1f 40%, #080818 100%);
+    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--theme-accent) 20%, transparent), transparent 28%),
+    linear-gradient(145deg, var(--theme-base) 0%, var(--theme-surface) 40%, var(--theme-base) 100%);
   color: hsl(var(--foreground));
   font-family: Manrope, sans-serif;
+  transition:
+    --theme-base var(--theme-transition-duration) ease,
+    --theme-surface var(--theme-transition-duration) ease,
+    --theme-accent var(--theme-transition-duration) ease,
+    --theme-accent-soft var(--theme-transition-duration) ease,
+    --theme-nav-accent var(--theme-transition-duration) ease,
+    --theme-accent-text var(--theme-transition-duration) ease,
+    --theme-card-bg var(--theme-transition-duration) ease,
+    --theme-card-border var(--theme-transition-duration) ease,
+    --theme-glass-bg var(--theme-transition-duration) ease,
+    --theme-glass-border var(--theme-transition-duration) ease,
+    --theme-button-border var(--theme-transition-duration) ease,
+    --theme-muted-text var(--theme-transition-duration) ease,
+    --theme-soft-copy var(--theme-transition-duration) ease,
+    --theme-faint-copy var(--theme-transition-duration) ease,
+    --theme-node-glow var(--theme-transition-duration) ease,
+    --theme-node-active-glow var(--theme-transition-duration) ease,
+    --theme-tooltip-bg var(--theme-transition-duration) ease,
+    --theme-tooltip-border var(--theme-transition-duration) ease,
+    background var(--theme-transition-duration) ease,
+    color var(--theme-transition-duration) ease;
 }
 
 a {
@@ -80,6 +248,137 @@ textarea {
 ::selection {
   background: rgba(102, 113, 255, 0.32);
   color: white;
+}
+
+.theme-shell {
+  background: linear-gradient(145deg, var(--theme-base) 0%, var(--theme-surface) 45%, var(--theme-base) 100%);
+  transition:
+    --theme-base var(--theme-transition-duration) ease,
+    --theme-surface var(--theme-transition-duration) ease,
+    --theme-elevated var(--theme-transition-duration) ease,
+    --theme-accent var(--theme-transition-duration) ease,
+    --theme-accent-soft var(--theme-transition-duration) ease,
+    --theme-nav-accent var(--theme-transition-duration) ease,
+    --theme-button-accent var(--theme-transition-duration) ease,
+    --theme-accent-text var(--theme-transition-duration) ease,
+    --theme-card-bg var(--theme-transition-duration) ease,
+    --theme-card-border var(--theme-transition-duration) ease,
+    --theme-glass-bg var(--theme-transition-duration) ease,
+    --theme-glass-border var(--theme-transition-duration) ease,
+    --theme-button-border var(--theme-transition-duration) ease,
+    --theme-muted-text var(--theme-transition-duration) ease,
+    --theme-soft-copy var(--theme-transition-duration) ease,
+    --theme-faint-copy var(--theme-transition-duration) ease,
+    --theme-node-glow var(--theme-transition-duration) ease,
+    --theme-node-active-glow var(--theme-transition-duration) ease,
+    --theme-tooltip-bg var(--theme-transition-duration) ease,
+    --theme-tooltip-border var(--theme-transition-duration) ease,
+    background var(--theme-transition-duration) ease,
+    box-shadow var(--theme-transition-duration) ease,
+    color var(--theme-transition-duration) ease;
+}
+
+.theme-shell * {
+  transition-property: background, background-color, border-color, color, fill, stroke, box-shadow, opacity, filter;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: ease;
+}
+
+.theme-hero-grid {
+  background-image:
+    radial-gradient(circle at 50% 25%, color-mix(in srgb, var(--theme-accent) 30%, transparent), transparent 28%),
+    radial-gradient(circle at 78% 85%, color-mix(in srgb, var(--theme-accent-soft) 22%, transparent), transparent 26%),
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--theme-surface) 94%, transparent),
+      color-mix(in srgb, var(--theme-base) 98%, transparent)
+    );
+}
+
+.theme-hero-spotlight {
+  background-image:
+    radial-gradient(circle at 65% 36%, color-mix(in srgb, var(--theme-accent) 58%, transparent), transparent 16%),
+    radial-gradient(circle at 82% 82%, color-mix(in srgb, var(--theme-accent-soft) 28%, transparent), transparent 14%);
+}
+
+.theme-top-glow {
+  background-image: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 28%);
+}
+
+.theme-portrait-orb {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--theme-accent) 82%, transparent),
+    color-mix(in srgb, var(--theme-accent) 18%, transparent) 45%,
+    transparent 70%
+  );
+}
+
+.theme-card {
+  border-color: var(--theme-card-border);
+  background: var(--theme-card-bg);
+  box-shadow: var(--theme-panel-shadow);
+}
+
+.theme-glass {
+  border-color: var(--theme-glass-border);
+  background: var(--theme-glass-bg);
+  box-shadow: var(--theme-panel-shadow);
+}
+
+.theme-button-primary {
+  border-color: var(--theme-button-border);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--theme-accent) 95%, transparent),
+    color-mix(in srgb, var(--theme-accent-soft) 42%, transparent)
+  );
+  box-shadow: var(--theme-glow-shadow);
+}
+
+.theme-active-bar {
+  background-image: linear-gradient(90deg, var(--theme-accent), transparent);
+}
+
+.theme-accent-text {
+  color: var(--theme-accent-text);
+}
+
+.theme-nav-active {
+  color: var(--theme-nav-accent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--theme-nav-accent) 38%, transparent);
+}
+
+.theme-muted-copy {
+  color: var(--theme-muted-text);
+}
+
+.theme-soft-copy {
+  color: var(--theme-soft-copy);
+}
+
+.theme-faint-copy {
+  color: var(--theme-faint-copy);
+}
+
+.theme-cluster-tooltip {
+  border-color: var(--theme-tooltip-border);
+  background: var(--theme-tooltip-bg);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .theme-shell,
+  .theme-shell *,
+  body {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 .font-faded-display {
