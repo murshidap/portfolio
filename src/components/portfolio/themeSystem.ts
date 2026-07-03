@@ -55,10 +55,10 @@ export const PORTFOLIO_THEMES: PortfolioTheme[] = [
   },
   {
     id: "royal-default",
-    colors: ["#030612", "#070B1F", "#11183B", "#4E77FF", "#8D73FF"],
-    accentText: "#B7C1FF",
-    navAccent: "#8D73FF",
-    buttonAccent: "#6671FF"
+    colors: ["#FFFFFF", "#FAFAFA", "#F4F4F5", "#111111", "#525252"],
+    accentText: "#525252",
+    navAccent: "#111111",
+    buttonAccent: "#111111"
   }
 ];
 
@@ -93,24 +93,24 @@ export function getThemeStyle(theme: PortfolioTheme): CSSProperties {
     ["--theme-nav-accent" as string]: theme.navAccent,
     ["--theme-button-accent" as string]: theme.buttonAccent,
     ["--theme-accent-text" as string]: theme.accentText,
-    ["--theme-card-bg" as string]: withAlpha("#FFFFFF", 0.04),
-    ["--theme-card-border" as string]: withAlpha(accentSoft, 0.16),
-    ["--theme-glass-bg" as string]: withAlpha("#FFFFFF", 0.05),
-    ["--theme-glass-border" as string]: withAlpha("#FFFFFF", 0.1),
-    ["--theme-panel-shadow" as string]: `0 24px 80px ${withAlpha(base, 0.52)}`,
-    ["--theme-glow-shadow" as string]: `0 0 30px ${withAlpha(accent, 0.35)}`,
-    ["--theme-button-gradient" as string]: `linear-gradient(90deg, ${withAlpha(accent, 0.95)}, ${withAlpha(accentSoft, 0.42)})`,
-    ["--theme-button-border" as string]: withAlpha(accentSoft, 0.18),
-    ["--theme-muted-text" as string]: withAlpha("#C9D2E8", 0.72),
-    ["--theme-soft-copy" as string]: withAlpha("#B3BED4", 0.56),
-    ["--theme-faint-copy" as string]: withAlpha("#BAC4DC", 0.58),
-    ["--theme-line" as string]: withAlpha(accentSoft, 0.34),
-    ["--theme-line-strong" as string]: withAlpha(accentSoft, 0.7),
-    ["--theme-node" as string]: "#F3F7FF",
-    ["--theme-node-glow" as string]: withAlpha(accentSoft, 0.92),
-    ["--theme-node-active-glow" as string]: withAlpha(accent, 1),
-    ["--theme-tooltip-bg" as string]: withAlpha(surface, 0.86),
-    ["--theme-tooltip-border" as string]: withAlpha(accentSoft, 0.22),
+    ["--theme-card-bg" as string]: "#FFFFFF",
+    ["--theme-card-border" as string]: "#D4D4D8",
+    ["--theme-glass-bg" as string]: "#FFFFFF",
+    ["--theme-glass-border" as string]: "#D4D4D8",
+    ["--theme-panel-shadow" as string]: "none",
+    ["--theme-glow-shadow" as string]: "none",
+    ["--theme-button-gradient" as string]: "#111111",
+    ["--theme-button-border" as string]: "#111111",
+    ["--theme-muted-text" as string]: withAlpha("#111111", 0.66),
+    ["--theme-soft-copy" as string]: withAlpha("#111111", 0.56),
+    ["--theme-faint-copy" as string]: withAlpha("#111111", 0.58),
+    ["--theme-line" as string]: withAlpha("#111111", 0.34),
+    ["--theme-line-strong" as string]: withAlpha("#111111", 0.72),
+    ["--theme-node" as string]: "#111111",
+    ["--theme-node-glow" as string]: withAlpha("#111111", 0.18),
+    ["--theme-node-active-glow" as string]: withAlpha("#111111", 0.26),
+    ["--theme-tooltip-bg" as string]: "#FFFFFF",
+    ["--theme-tooltip-border" as string]: "#D4D4D8",
     ["--theme-transition-duration" as string]: `${THEME_TRANSITION_MS}ms`
   };
 }

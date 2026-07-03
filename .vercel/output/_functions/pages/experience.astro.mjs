@@ -1,13 +1,13 @@
-import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_y1XpGNYX.mjs';
+import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_4Yw_W1_G.mjs';
 import 'piccolore';
-import { $ as $$PortfolioPage } from '../chunks/PortfolioPage_zz7eFHWv.mjs';
+import { $ as $$PortfolioPage } from '../chunks/PortfolioPage_9CSGwGzb.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Experience = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${renderComponent($$result, "PortfolioPage", $$PortfolioPage, { "title": "Experience", "view": "experience" })}`;
-}, "C:/Murshida/Career/murshida-portfolio/src/pages/experience.astro", void 0);
+}, "C:/Murshida/Career/portfolio/src/pages/experience.astro", void 0);
 
-const $$file = "C:/Murshida/Career/murshida-portfolio/src/pages/experience.astro";
+const $$file = "C:/Murshida/Career/portfolio/src/pages/experience.astro";
 const $$url = "/experience";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

@@ -4,8 +4,8 @@ const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
-export const ADMIN_ACCESS_COOKIE = "murshida-admin-access-token";
-export const ADMIN_REFRESH_COOKIE = "murshida-admin-refresh-token";
+export const ADMIN_ACCESS_COOKIE = "portfolio-admin-access-token";
+export const ADMIN_REFRESH_COOKIE = "portfolio-admin-refresh-token";
 
 export function getPublicServerSupabase() {
   if (!supabaseUrl || !supabaseAnonKey) {

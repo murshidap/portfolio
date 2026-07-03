@@ -14,5 +14,5 @@ export const supabase =
       })
     : null;
 
-export const adminUsername = import.meta.env.PUBLIC_ADMIN_USERNAME ?? "murshida-admin";
-export const adminEmail = import.meta.env.PUBLIC_ADMIN_EMAIL ?? "admin@example.com";
+export const adminUsername = import.meta.env.PUBLIC_ADMIN_USERNAME ?? "murshidaprml";
+export const adminEmail = import.meta.env.PUBLIC_ADMIN_EMAIL ?? "murshidaprml@gmail.com";

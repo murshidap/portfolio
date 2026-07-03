@@ -1,4 +1,4 @@
-import { g as getAdminUserFromRequest, a as getServiceSupabase } from '../../../chunks/auth_hH7cwaQS.mjs';
+import { g as getAdminUserFromRequest, a as getServiceSupabase } from '../../../chunks/auth_BMTa4l8E.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const allowedTables = /* @__PURE__ */ new Set(["projects", "experience", "certificates", "education"]);

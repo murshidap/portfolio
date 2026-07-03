@@ -24,7 +24,8 @@ export const defaultContent: PortfolioContent = {
         "A responsive portfolio platform with admin-driven content, glowing visuals, and premium motion.",
       stack: ["Astro", "React", "Supabase"],
       project_url: "https://example.com",
-      image_url: ""
+      image_url: "",
+      screenshot_urls: []
     },
     {
       id: "project-2",
@@ -34,7 +35,8 @@ export const defaultContent: PortfolioContent = {
         "A polished landing experience recreated with careful spacing, gradients, and glassmorphism.",
       stack: ["Tailwind", "Framer Motion"],
       project_url: "https://example.com",
-      image_url: ""
+      image_url: "",
+      screenshot_urls: []
     }
   ],
   experience: [

@@ -22,6 +22,7 @@ export interface ProjectItem {
   stack: string[];
   project_url: string;
   image_url: string;
+  screenshot_urls?: string[];
 }
 
 export interface ExperienceItem {

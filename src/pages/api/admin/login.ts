@@ -2,8 +2,8 @@ import type { APIRoute } from "astro";
 
 import { ADMIN_ACCESS_COOKIE, ADMIN_REFRESH_COOKIE, getPublicServerSupabase } from "@/lib/server/auth";
 
-const adminUsername = import.meta.env.PUBLIC_ADMIN_USERNAME ?? "murshida-admin";
-const adminEmail = import.meta.env.PUBLIC_ADMIN_EMAIL ?? "admin@example.com";
+const adminUsername = import.meta.env.PUBLIC_ADMIN_USERNAME ?? "murshidaprml";
+const adminEmail = import.meta.env.PUBLIC_ADMIN_EMAIL ?? "murshidaprml@gmail.com";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const supabase = getPublicServerSupabase();

@@ -2,6 +2,21 @@ import { defaultContent } from "@/data/defaultContent";
 import type { PortfolioContent } from "@/types/content";
 import { getPublicServerSupabase, getServiceSupabase } from "@/lib/server/auth";
 
+function normalizeScreenshotUrls(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[\n,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 export async function fetchPortfolioContent(serverSide = false): Promise<PortfolioContent> {
   const supabase = serverSide ? getServiceSupabase() ?? getPublicServerSupabase() : getPublicServerSupabase();
   if (!supabase) {
@@ -18,7 +33,12 @@ export async function fetchPortfolioContent(serverSide = false): Promise<Portfol
 
   return {
     intro: introResult.data ?? defaultContent.intro,
-    projects: projectsResult.data?.length ? projectsResult.data : defaultContent.projects,
+    projects: projectsResult.data?.length
+      ? projectsResult.data.map((project) => ({
+          ...project,
+          screenshot_urls: normalizeScreenshotUrls(project.screenshot_urls)
+        }))
+      : defaultContent.projects,
     experience: experienceResult.data?.length ? experienceResult.data : defaultContent.experience,
     certificates: certificatesResult.data?.length ? certificatesResult.data : defaultContent.certificates,
     education: educationResult.data?.length ? educationResult.data : defaultContent.education

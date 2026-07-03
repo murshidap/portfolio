@@ -1,8 +1,8 @@
-import { A as ADMIN_ACCESS_COOKIE, b as ADMIN_REFRESH_COOKIE, c as getPublicServerSupabase } from '../../../chunks/auth_hH7cwaQS.mjs';
+import { b as getPublicServerSupabase, A as ADMIN_ACCESS_COOKIE, c as ADMIN_REFRESH_COOKIE } from '../../../chunks/auth_BMTa4l8E.mjs';
 export { renderers } from '../../../renderers.mjs';
 
-const adminUsername = "murshida-admin";
-const adminEmail = "admin@example.com";
+const adminUsername = "murshidaprml";
+const adminEmail = "murshidaprml@gmail.com";
 const POST = async ({ request, cookies }) => {
   const supabase = getPublicServerSupabase();
   if (!supabase) {
