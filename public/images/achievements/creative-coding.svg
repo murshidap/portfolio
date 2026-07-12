@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">Creative coding abstract canvas</title>
+  <desc id="desc">A wide abstract creative coding canvas.</desc>
+  <rect x="54" y="52" width="532" height="256" rx="34" fill="#f8fafc"/>
+  <circle cx="164" cy="178" r="78" fill="#fb7185"/>
+  <circle cx="294" cy="178" r="78" fill="#60a5fa" opacity="0.9"/>
+  <circle cx="424" cy="178" r="78" fill="#34d399" opacity="0.9"/>
+  <path d="M128 256c92-88 178-88 258 0 46 48 88 47 126-2" fill="none" stroke="#111827" stroke-width="16" stroke-linecap="round"/>
+</svg>

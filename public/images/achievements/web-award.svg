@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Web development award abstract screen</title>
+  <desc id="desc">A wide browser window with a trophy mark.</desc>
+  <rect x="68" y="58" width="584" height="304" rx="28" fill="#f8fafc"/>
+  <rect x="98" y="110" width="524" height="208" rx="18" fill="#ccfbf1"/>
+  <circle cx="126" cy="84" r="10" fill="#ef4444"/>
+  <circle cx="158" cy="84" r="10" fill="#f59e0b"/>
+  <circle cx="190" cy="84" r="10" fill="#10b981"/>
+  <path d="M354 154h92v42c0 52-42 94-92 94s-92-42-92-94v-42z" fill="#0f766e"/>
+  <path d="M262 170h-48v22c0 40 34 72 76 72M446 170h48v22c0 40-34 72-76 72" fill="none" stroke="#0f766e" stroke-width="20" stroke-linecap="round"/>
+  <path d="M354 290v42M304 332h100" stroke="#0f766e" stroke-width="20" stroke-linecap="round"/>
+</svg>

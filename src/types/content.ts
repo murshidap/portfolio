@@ -41,6 +41,12 @@ export interface CertificateItem {
   asset_url: string;
 }
 
+export interface AchievementItem {
+  id: string;
+  title: string;
+  image_url: string;
+}
+
 export interface EducationItem {
   id: string;
   institution: string;
@@ -54,5 +60,6 @@ export interface PortfolioContent {
   projects: ProjectItem[];
   experience: ExperienceItem[];
   certificates: CertificateItem[];
+  achievements: AchievementItem[];
   education: EducationItem[];
 }

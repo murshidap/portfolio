@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="760" viewBox="0 0 560 760" role="img" aria-labelledby="title desc">
+  <title id="title">Leadership recognition abstract portrait</title>
+  <desc id="desc">A tall abstract leadership recognition image.</desc>
+  <rect x="78" y="70" width="404" height="620" rx="42" fill="#f8fafc"/>
+  <circle cx="280" cy="242" r="92" fill="#bfdbfe"/>
+  <path d="M160 588c18-112 72-168 120-168s102 56 120 168" fill="#1d4ed8"/>
+  <path d="M178 158h204M144 628h272" stroke="#111827" stroke-width="22" stroke-linecap="round"/>
+  <path d="M250 420l30 46 30-46" fill="none" stroke="#facc15" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

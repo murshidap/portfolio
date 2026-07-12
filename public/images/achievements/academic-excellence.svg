@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="640" viewBox="0 0 480 640" role="img" aria-labelledby="title desc">
+  <title id="title">Academic excellence abstract certificate</title>
+  <desc id="desc">A tall abstract certificate-inspired composition.</desc>
+  <rect x="74" y="74" width="332" height="492" rx="28" fill="#f8fafc"/>
+  <rect x="104" y="112" width="272" height="416" rx="18" fill="#dbeafe"/>
+  <path d="M132 174h216M132 224h168M132 274h216M132 324h126" stroke="#172554" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="314" cy="430" r="54" fill="#fbbf24"/>
+  <path d="M314 392l12 24 27 4-19 19 5 27-25-13-24 13 5-27-20-19 27-4z" fill="#172554"/>
+</svg>

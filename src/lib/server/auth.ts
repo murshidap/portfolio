@@ -3,9 +3,24 @@ import { createClient, type User } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+const adminEmail = import.meta.env.PUBLIC_ADMIN_EMAIL ?? "murshidaprml@gmail.com";
+const adminUserId = import.meta.env.ADMIN_USER_ID ?? "ed3ed5a0-0864-4f8a-ab88-d5eaba2a5fb7";
 
 export const ADMIN_ACCESS_COOKIE = "portfolio-admin-access-token";
 export const ADMIN_REFRESH_COOKIE = "portfolio-admin-refresh-token";
+
+export function isSameOriginAdminRequest(request: Request) {
+  const origin = request.headers.get("origin");
+  if (!origin) {
+    return true;
+  }
+
+  return origin === new URL(request.url).origin;
+}
+
+export function forbiddenResponse() {
+  return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+}
 
 export function getPublicServerSupabase() {
   if (!supabaseUrl || !supabaseAnonKey) {
@@ -33,6 +48,34 @@ export function getServiceSupabase() {
   });
 }
 
+export function getAdminServerSupabase(request: Request) {
+  const serviceClient = getServiceSupabase();
+  if (serviceClient) {
+    return serviceClient;
+  }
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null;
+  }
+
+  const accessToken = readCookie(request.headers.get("cookie") ?? "", ADMIN_ACCESS_COOKIE);
+  if (!accessToken) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    }
+  });
+}
+
 export async function getAdminUserFromRequest(request: Request): Promise<User | null> {
   const supabase = getPublicServerSupabase();
   if (!supabase) {
@@ -50,7 +93,12 @@ export async function getAdminUserFromRequest(request: Request): Promise<User | 
     return null;
   }
 
-  return data.user ?? null;
+  const user = data.user ?? null;
+  if (!user || user.id !== adminUserId || user.email !== adminEmail) {
+    return null;
+  }
+
+  return user;
 }
 
 export function readCookie(cookieHeader: string, name: string) {

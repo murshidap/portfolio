@@ -1,7 +1,7 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_4Yw_W1_G.mjs';
 import 'piccolore';
-import { P as PortfolioApp } from '../chunks/PortfolioApp_D85OaiJ4.mjs';
-import { f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout__YDfVSjE.mjs';
+import { P as PortfolioApp } from '../chunks/PortfolioApp_CPqXV6NP.mjs';
+import { f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout_Cb8D51r9.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Index = createComponent(async ($$result, $$props, $$slots) => {

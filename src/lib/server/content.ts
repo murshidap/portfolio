@@ -23,11 +23,12 @@ export async function fetchPortfolioContent(serverSide = false): Promise<Portfol
     return defaultContent;
   }
 
-  const [introResult, projectsResult, experienceResult, certificatesResult, educationResult] = await Promise.all([
+  const [introResult, projectsResult, experienceResult, certificatesResult, achievementsResult, educationResult] = await Promise.all([
     supabase.from("intro_content").select("*").limit(1).maybeSingle(),
     supabase.from("projects").select("*").order("created_at", { ascending: false }),
     supabase.from("experience").select("*").order("created_at", { ascending: false }),
     supabase.from("certificates").select("*").order("created_at", { ascending: false }),
+    supabase.from("achievements").select("*").order("created_at", { ascending: false }),
     supabase.from("education").select("*").order("created_at", { ascending: false })
   ]);
 
@@ -41,6 +42,7 @@ export async function fetchPortfolioContent(serverSide = false): Promise<Portfol
       : defaultContent.projects,
     experience: experienceResult.data?.length ? experienceResult.data : defaultContent.experience,
     certificates: certificatesResult.data?.length ? certificatesResult.data : defaultContent.certificates,
+    achievements: achievementsResult.data?.length ? achievementsResult.data : defaultContent.achievements,
     education: educationResult.data?.length ? educationResult.data : defaultContent.education
   };
 }

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="520" viewBox="0 0 760 520" role="img" aria-labelledby="title desc">
+  <title id="title">Hackathon finalist abstract code scene</title>
+  <desc id="desc">A wide code-and-lightning achievement composition.</desc>
+  <rect x="70" y="70" width="620" height="380" rx="34" fill="#f8fafc"/>
+  <path d="M190 190l-82 70 82 70M570 190l82 70-82 70" fill="none" stroke="#1f2937" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M418 120l-102 156h92l-66 124 138-176h-98z" fill="#facc15"/>
+  <path d="M256 160l-58 200M504 160l-58 200" stroke="#2563eb" stroke-width="22" stroke-linecap="round"/>
+</svg>

@@ -2,49 +2,34 @@ import { e as createComponent, k as renderComponent, r as renderTemplate, h as c
 import 'piccolore';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { LogOut, Save, LoaderCircle, Upload, Plus, Trash2 } from 'lucide-react';
-import * as React from 'react';
 import { useState } from 'react';
-import { c as cn, d as defaultContent, B as Button, C as Card, f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout__YDfVSjE.mjs';
-import { g as getAdminUserFromRequest } from '../chunks/auth_BMTa4l8E.mjs';
+import { c as cn, d as defaultContent, B as Button, I as Input, T as Textarea, f as fetchPortfolioContent, $ as $$BaseLayout } from '../chunks/BaseLayout_Cb8D51r9.mjs';
+import { g as getAdminUserFromRequest } from '../chunks/auth_B79Sfj4C.mjs';
 export { renderers } from '../renderers.mjs';
 
-const Input = React.forwardRef(
-  ({ className, ...props }, ref) => /* @__PURE__ */ jsx(
-    "input",
+function Card({ className, ...props }) {
+  return /* @__PURE__ */ jsx(
+    "div",
     {
-      ref,
       className: cn(
-        "flex h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-black focus:ring-1 focus:ring-black disabled:bg-zinc-100",
+        "theme-card rounded-md border",
         className
       ),
       ...props
     }
-  )
-);
-Input.displayName = "Input";
+  );
+}
 
 function Label({ className, ...props }) {
   return /* @__PURE__ */ jsx("label", { className: cn("mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-zinc-600", className), ...props });
 }
-
-const Textarea = React.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx(
-  "textarea",
-  {
-    ref,
-    className: cn(
-      "min-h-[110px] w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-black focus:ring-1 focus:ring-black",
-      className
-    ),
-    ...props
-  }
-));
-Textarea.displayName = "Textarea";
 
 const tabs = [
   { key: "intro", label: "Intro" },
   { key: "projects", label: "Projects" },
   { key: "experience", label: "Experience" },
   { key: "certificates", label: "Certificates" },
+  { key: "achievements", label: "Achievements" },
   { key: "education", label: "Education" }
 ];
 const createId = () => crypto.randomUUID();
@@ -58,6 +43,7 @@ const primaryActionClass = "!h-9 !rounded-md !border-black !bg-black !px-3 !text
 const secondaryActionClass = "!h-9 !rounded-md !border-zinc-300 !bg-white !px-3 !text-sm !font-medium !normal-case !tracking-normal !text-zinc-900 !shadow-none hover:!scale-100 hover:!border-zinc-500 hover:!bg-zinc-50";
 const destructiveActionClass = "!h-9 !rounded-md !border-zinc-300 !bg-white !px-3 !text-sm !font-medium !normal-case !tracking-normal !text-zinc-700 !shadow-none hover:!scale-100 hover:!border-zinc-900 hover:!bg-zinc-50 hover:!text-black";
 const panelClass = "!rounded-md !border-zinc-200 !bg-white !shadow-none !backdrop-blur-none";
+const experienceDescriptionMaxLength = 220;
 function SectionHeader({ title, description }) {
   return /* @__PURE__ */ jsxs("div", { className: "mb-5", children: [
     /* @__PURE__ */ jsx("h2", { className: "text-2xl font-semibold tracking-tight text-zinc-950", children: title }),
@@ -176,6 +162,7 @@ function AdminApp({ authenticated, initialContent }) {
     projects: content.projects.length,
     experience: content.experience.length,
     certificates: content.certificates.length,
+    achievements: content.achievements.length,
     education: content.education.length
   };
   const activeTab = tabs.find((item) => item.key === tab) ?? tabs[0];
@@ -370,7 +357,13 @@ function AdminApp({ authenticated, initialContent }) {
         tab === "experience" && /* @__PURE__ */ jsx(CrudList, { addLabel: "Add Experience", description: "Manage experience entries shown in the user panel.", onAdd: () => setContent((previous) => ({
           ...previous,
           experience: [{ id: createId(), company: "", role: "", duration: "", description: "" }, ...previous.experience]
-        })), onSave: () => saveList("experience", content.experience), title: "Experience", children: content.experience.map((item, index) => /* @__PURE__ */ jsx(
+        })), onSave: () => saveList(
+          "experience",
+          content.experience.map((entry) => ({
+            ...entry,
+            description: entry.description.slice(0, experienceDescriptionMaxLength)
+          }))
+        ), title: "Experience", children: content.experience.map((item, index) => /* @__PURE__ */ jsx(
           SimpleEditor,
           {
             fields: [
@@ -395,6 +388,7 @@ function AdminApp({ authenticated, initialContent }) {
               ...previous,
               experience: previous.experience.map((entry, entryIndex) => entryIndex === index ? next : entry)
             })),
+            bodyMaxLength: experienceDescriptionMaxLength,
             textValue: item.description
           },
           item.id
@@ -417,6 +411,27 @@ function AdminApp({ authenticated, initialContent }) {
                 certificates: previous.certificates.filter((entry) => entry.id !== item.id)
               }));
               void deleteRow("certificates", item.id);
+            }
+          },
+          item.id
+        )) }),
+        tab === "achievements" && /* @__PURE__ */ jsx(CrudList, { addLabel: "Add Achievement", description: "Manage achievement photos and hover titles.", onAdd: () => setContent((previous) => ({
+          ...previous,
+          achievements: [{ id: createId(), title: "", image_url: "" }, ...previous.achievements]
+        })), onSave: () => saveList("achievements", content.achievements), title: "Achievements", children: content.achievements.map((item, index) => /* @__PURE__ */ jsx(
+          AchievementEditor,
+          {
+            item,
+            onChange: (next) => setContent((previous) => ({
+              ...previous,
+              achievements: previous.achievements.map((entry, entryIndex) => entryIndex === index ? next : entry)
+            })),
+            onDelete: () => {
+              setContent((previous) => ({
+                ...previous,
+                achievements: previous.achievements.filter((entry) => entry.id !== item.id)
+              }));
+              void deleteRow("achievements", item.id);
             }
           },
           item.id
@@ -561,9 +576,12 @@ function SimpleEditor({
   fields,
   onFieldUpdate,
   onBodyChange,
+  bodyMaxLength,
   textValue,
   onDelete
 }) {
+  const visibleTextValue = bodyMaxLength ? textValue.slice(0, bodyMaxLength) : textValue;
+  const descriptionLength = visibleTextValue.length;
   return /* @__PURE__ */ jsxs(Card, { className: cn(panelClass, "p-4"), children: [
     /* @__PURE__ */ jsxs("div", { className: "grid gap-4 md:grid-cols-3", children: [
       fields.map(([label, value, factory]) => /* @__PURE__ */ jsxs("div", { children: [
@@ -571,8 +589,52 @@ function SimpleEditor({
         /* @__PURE__ */ jsx(Input, { value, onChange: (event) => onFieldUpdate(factory(event.target.value)) })
       ] }, label)),
       /* @__PURE__ */ jsxs("div", { className: "md:col-span-3", children: [
-        /* @__PURE__ */ jsx(Label, { children: "Description" }),
-        /* @__PURE__ */ jsx(Textarea, { value: textValue, onChange: (event) => onBodyChange(event.target.value) })
+        /* @__PURE__ */ jsxs("div", { className: "mb-1 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsx(Label, { children: "Description" }),
+          bodyMaxLength ? /* @__PURE__ */ jsxs("span", { className: "text-xs text-zinc-500", children: [
+            descriptionLength,
+            "/",
+            bodyMaxLength
+          ] }) : null
+        ] }),
+        /* @__PURE__ */ jsx(
+          Textarea,
+          {
+            maxLength: bodyMaxLength,
+            value: visibleTextValue,
+            onChange: (event) => onBodyChange(bodyMaxLength ? event.target.value.slice(0, bodyMaxLength) : event.target.value)
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx("div", { className: "mt-4", children: /* @__PURE__ */ jsxs(Button, { className: destructiveActionClass, onClick: onDelete, type: "button", variant: "secondary", children: [
+      /* @__PURE__ */ jsx(Trash2, { className: "h-4 w-4" }),
+      "Delete"
+    ] }) })
+  ] });
+}
+function AchievementEditor({
+  item,
+  onChange,
+  onDelete
+}) {
+  return /* @__PURE__ */ jsxs(Card, { className: cn(panelClass, "p-4"), children: [
+    /* @__PURE__ */ jsxs("div", { className: "grid gap-4 md:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]", children: [
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx(Label, { children: "Title" }),
+        /* @__PURE__ */ jsx(Input, { value: item.title, onChange: (event) => onChange({ ...item, title: event.target.value }) })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx(Label, { children: "Achievement Photo" }),
+        /* @__PURE__ */ jsx(
+          AssetUpload,
+          {
+            accept: ".jpeg,.jpg,.png,.webp,.svg",
+            assetFolder: "achievements",
+            onUploaded: (url) => onChange({ ...item, image_url: url }),
+            value: item.image_url
+          }
+        )
       ] })
     ] }),
     /* @__PURE__ */ jsx("div", { className: "mt-4", children: /* @__PURE__ */ jsxs(Button, { className: destructiveActionClass, onClick: onDelete, type: "button", variant: "secondary", children: [

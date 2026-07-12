@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { defaultContent } from "@/data/defaultContent";
 import { cn } from "@/lib/utils";
 import type {
+  AchievementItem,
   CertificateItem,
   EducationItem,
   ExperienceItem,
@@ -16,8 +17,8 @@ import type {
   ProjectItem
 } from "@/types/content";
 
-type TabKey = "intro" | "projects" | "experience" | "certificates" | "education";
-type CollectionKey = "projects" | "experience" | "certificates" | "education";
+type TabKey = "intro" | "projects" | "experience" | "certificates" | "achievements" | "education";
+type CollectionKey = "projects" | "experience" | "certificates" | "achievements" | "education";
 
 interface AdminAppProps {
   authenticated: boolean;
@@ -29,6 +30,7 @@ const tabs: Array<{ key: TabKey; label: string }> = [
   { key: "projects", label: "Projects" },
   { key: "experience", label: "Experience" },
   { key: "certificates", label: "Certificates" },
+  { key: "achievements", label: "Achievements" },
   { key: "education", label: "Education" }
 ];
 
@@ -52,6 +54,7 @@ const secondaryActionClass =
 const destructiveActionClass =
   "!h-9 !rounded-md !border-zinc-300 !bg-white !px-3 !text-sm !font-medium !normal-case !tracking-normal !text-zinc-700 !shadow-none hover:!scale-100 hover:!border-zinc-900 hover:!bg-zinc-50 hover:!text-black";
 const panelClass = "!rounded-md !border-zinc-200 !bg-white !shadow-none !backdrop-blur-none";
+const experienceDescriptionMaxLength = 220;
 
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
@@ -192,6 +195,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     projects: content.projects.length,
     experience: content.experience.length,
     certificates: content.certificates.length,
+    achievements: content.achievements.length,
     education: content.education.length
   };
   const activeTab = tabs.find((item) => item.key === tab) ?? tabs[0];
@@ -403,7 +407,15 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
               ...previous,
               experience: [{ id: createId(), company: "", role: "", duration: "", description: "" }, ...previous.experience]
             }))
-          } onSave={() => saveList("experience", content.experience)} title="Experience">
+          } onSave={() =>
+            saveList(
+              "experience",
+              content.experience.map((entry) => ({
+                ...entry,
+                description: entry.description.slice(0, experienceDescriptionMaxLength)
+              }))
+            )
+          } title="Experience">
             {content.experience.map((item, index) => (
               <SimpleEditor
                 key={item.id}
@@ -433,6 +445,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     experience: previous.experience.map((entry, entryIndex) => (entryIndex === index ? next : entry))
                   }))
                 }
+                bodyMaxLength={experienceDescriptionMaxLength}
                 textValue={item.description}
               />
             ))}
@@ -463,6 +476,35 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     certificates: previous.certificates.filter((entry) => entry.id !== item.id)
                   }));
                   void deleteRow("certificates", item.id);
+                }}
+              />
+            ))}
+          </CrudList>
+        )}
+
+        {tab === "achievements" && (
+          <CrudList addLabel="Add Achievement" description="Manage achievement photos and hover titles." onAdd={() =>
+            setContent((previous) => ({
+              ...previous,
+              achievements: [{ id: createId(), title: "", image_url: "" }, ...previous.achievements]
+            }))
+          } onSave={() => saveList("achievements", content.achievements)} title="Achievements">
+            {content.achievements.map((item, index) => (
+              <AchievementEditor
+                key={item.id}
+                item={item}
+                onChange={(next) =>
+                  setContent((previous) => ({
+                    ...previous,
+                    achievements: previous.achievements.map((entry, entryIndex) => (entryIndex === index ? next : entry))
+                  }))
+                }
+                onDelete={() => {
+                  setContent((previous) => ({
+                    ...previous,
+                    achievements: previous.achievements.filter((entry) => entry.id !== item.id)
+                  }));
+                  void deleteRow("achievements", item.id);
                 }}
               />
             ))}
@@ -635,15 +677,20 @@ function SimpleEditor<T extends ExperienceItem | EducationItem>({
   fields,
   onFieldUpdate,
   onBodyChange,
+  bodyMaxLength,
   textValue,
   onDelete
 }: {
   fields: Array<[string, string, (value: string) => T]>;
   onFieldUpdate: (next: T) => void;
   onBodyChange: (value: string) => void;
+  bodyMaxLength?: number;
   textValue: string;
   onDelete: () => void;
 }) {
+  const visibleTextValue = bodyMaxLength ? textValue.slice(0, bodyMaxLength) : textValue;
+  const descriptionLength = visibleTextValue.length;
+
   return (
     <Card className={cn(panelClass, "p-4")}>
       <div className="grid gap-4 md:grid-cols-3">
@@ -654,8 +701,55 @@ function SimpleEditor<T extends ExperienceItem | EducationItem>({
           </div>
         ))}
         <div className="md:col-span-3">
-          <Label>Description</Label>
-          <Textarea value={textValue} onChange={(event) => onBodyChange(event.target.value)} />
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <Label>Description</Label>
+            {bodyMaxLength ? (
+              <span className="text-xs text-zinc-500">
+                {descriptionLength}/{bodyMaxLength}
+              </span>
+            ) : null}
+          </div>
+          <Textarea
+            maxLength={bodyMaxLength}
+            value={visibleTextValue}
+            onChange={(event) => onBodyChange(bodyMaxLength ? event.target.value.slice(0, bodyMaxLength) : event.target.value)}
+          />
+        </div>
+      </div>
+      <div className="mt-4">
+        <Button className={destructiveActionClass} onClick={onDelete} type="button" variant="secondary">
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+function AchievementEditor({
+  item,
+  onChange,
+  onDelete
+}: {
+  item: AchievementItem;
+  onChange: (next: AchievementItem) => void;
+  onDelete: () => void;
+}) {
+  return (
+    <Card className={cn(panelClass, "p-4")}>
+      <div className="grid gap-4 md:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
+        <div>
+          <Label>Title</Label>
+          <Input value={item.title} onChange={(event) => onChange({ ...item, title: event.target.value })} />
+        </div>
+        <div>
+          <Label>Achievement Photo</Label>
+          <AssetUpload
+            accept=".jpeg,.jpg,.png,.webp,.svg"
+            assetFolder="achievements"
+            onUploaded={(url) => onChange({ ...item, image_url: url })}
+            value={item.image_url}
+          />
         </div>
       </div>
       <div className="mt-4">

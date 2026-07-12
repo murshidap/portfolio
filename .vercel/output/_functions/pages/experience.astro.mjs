@@ -1,6 +1,6 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_4Yw_W1_G.mjs';
 import 'piccolore';
-import { $ as $$PortfolioPage } from '../chunks/PortfolioPage_9CSGwGzb.mjs';
+import { $ as $$PortfolioPage } from '../chunks/PortfolioPage_BE4nDGmZ.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Experience = createComponent(($$result, $$props, $$slots) => {

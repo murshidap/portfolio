@@ -1,18 +1,27 @@
 import type { APIRoute } from "astro";
 
-import { getAdminUserFromRequest, getServiceSupabase } from "@/lib/server/auth";
+import {
+  forbiddenResponse,
+  getAdminServerSupabase,
+  getAdminUserFromRequest,
+  isSameOriginAdminRequest
+} from "@/lib/server/auth";
 
-const allowedTables = new Set(["projects", "experience", "certificates", "education"]);
+const allowedTables = new Set(["projects", "experience", "certificates", "achievements", "education"]);
 
 export const POST: APIRoute = async ({ request }) => {
+  if (!isSameOriginAdminRequest(request)) {
+    return forbiddenResponse();
+  }
+
   const user = await getAdminUserFromRequest(request);
   if (!user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
-  const supabase = getServiceSupabase();
+  const supabase = getAdminServerSupabase(request);
   if (!supabase) {
-    return new Response(JSON.stringify({ error: "Supabase service role key is missing." }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Supabase server credentials are missing." }), { status: 500 });
   }
 
   const { table, rows } = await request.json();
@@ -29,14 +38,18 @@ export const POST: APIRoute = async ({ request }) => {
 };
 
 export const DELETE: APIRoute = async ({ request }) => {
+  if (!isSameOriginAdminRequest(request)) {
+    return forbiddenResponse();
+  }
+
   const user = await getAdminUserFromRequest(request);
   if (!user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
-  const supabase = getServiceSupabase();
+  const supabase = getAdminServerSupabase(request);
   if (!supabase) {
-    return new Response(JSON.stringify({ error: "Supabase service role key is missing." }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Supabase server credentials are missing." }), { status: 500 });
   }
 
   const { table, id } = await request.json();

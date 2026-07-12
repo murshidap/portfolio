@@ -1,14 +1,17 @@
-import { g as getAdminUserFromRequest, a as getServiceSupabase } from '../../../chunks/auth_BMTa4l8E.mjs';
+import { i as isSameOriginAdminRequest, f as forbiddenResponse, g as getAdminUserFromRequest, a as getAdminServerSupabase } from '../../../chunks/auth_B79Sfj4C.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const POST = async ({ request }) => {
+  if (!isSameOriginAdminRequest(request)) {
+    return forbiddenResponse();
+  }
   const user = await getAdminUserFromRequest(request);
   if (!user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
-  const supabase = getServiceSupabase();
+  const supabase = getAdminServerSupabase(request);
   if (!supabase) {
-    return new Response(JSON.stringify({ error: "Supabase service role key is missing." }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Supabase server credentials are missing." }), { status: 500 });
   }
   const payload = await request.json();
   const { error } = await supabase.from("intro_content").upsert(payload, { onConflict: "id" });

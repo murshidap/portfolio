@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_SUPABASE_ANON_KEY?: string;
   readonly PUBLIC_ADMIN_USERNAME?: string;
   readonly PUBLIC_ADMIN_EMAIL?: string;
+  readonly ADMIN_USER_ID?: string;
   readonly SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 

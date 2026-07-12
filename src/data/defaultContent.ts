@@ -7,7 +7,7 @@ export const defaultContent: PortfolioContent = {
     role: "Web Developer",
     skills: ["Astro", "React", "Tailwind CSS", "Supabase"],
     intro:
-      "I build modern, responsive, and interactive web experiences that combine clean design with functional, scalable development. I enjoy creating interfaces that not only look visually polished, but also feel smooth, intuitive, and engaging to use.",
+      "I am a web developer with a BSc in Computer Science and professional experience working as a Junior Web Developer. I specialize in building modern, responsive, and interactive websites that combine strong visual design with clean, scalable, and reliable development.\n\nI enjoy turning ideas and design concepts into functional websites through thoughtful layouts, smooth interactions, and well-structured code.\n\nAlongside my work in web development, I am currently pursuing an MSc in Computer Science with a specialization in Data Analytics. I am committed to improving my skills, exploring modern technologies, and building web experiences that are both creative and practical.",
     email: "murshida@example.com",
     phone: "+91 90000 00000",
     github_url: "https://github.com/",
@@ -57,13 +57,72 @@ export const defaultContent: PortfolioContent = {
       asset_url: ""
     }
   ],
+  achievements: [
+    {
+      id: "achievement-1",
+      title: "Academic Excellence",
+      image_url: "/images/achievements/academic-excellence.svg"
+    },
+    {
+      id: "achievement-2",
+      title: "Web Development Award",
+      image_url: "/images/achievements/web-award.svg"
+    },
+    {
+      id: "achievement-3",
+      title: "Data Analytics Milestone",
+      image_url: "/images/achievements/data-milestone.svg"
+    },
+    {
+      id: "achievement-4",
+      title: "Project Showcase",
+      image_url: "/images/achievements/project-showcase.svg"
+    },
+    {
+      id: "achievement-5",
+      title: "Hackathon Finalist",
+      image_url: "/images/achievements/hackathon-finalist.svg"
+    },
+    {
+      id: "achievement-6",
+      title: "Creative Coding Recognition",
+      image_url: "/images/achievements/creative-coding.svg"
+    },
+    {
+      id: "achievement-7",
+      title: "Certification Path",
+      image_url: "/images/achievements/certification-path.svg"
+    },
+    {
+      id: "achievement-8",
+      title: "Community Contribution",
+      image_url: "/images/achievements/community-contribution.svg"
+    },
+    {
+      id: "achievement-9",
+      title: "Leadership Recognition",
+      image_url: "/images/achievements/leadership-recognition.svg"
+    },
+    {
+      id: "achievement-10",
+      title: "Outstanding Award",
+      image_url: "/images/achievements/outstanding-award.svg"
+    }
+  ],
   education: [
     {
       id: "edu-1",
-      institution: "Your Institution",
-      degree: "Bachelor's Degree",
-      duration: "2020 - 2024",
-      description: "Focused on web technologies, software engineering, and interface design."
+      institution: "MES Ponnani College, University of Calicut",
+      degree: "B.Sc Computer Science",
+      duration: "2023 - 26",
+      description: ""
+    },
+    {
+      id: "edu-2",
+      institution: "Pondichery University",
+      degree: "M.Sc Computer Science (Data Analytics)",
+      duration: "2026 - 28 (Ongoing)",
+      description: ""
     }
   ]
 };

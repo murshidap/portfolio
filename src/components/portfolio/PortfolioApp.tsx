@@ -1,15 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Mail, Share2 } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type WheelEvent } from "react";
+import { ArrowUpRight, Mail, Share2, X } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type WheelEvent } from "react";
 
 import { ConstellationWidget } from "@/components/portfolio/ConstellationWidget";
 import { DEFAULT_THEME_INDEX, PORTFOLIO_THEMES, getThemeStyle } from "@/components/portfolio/themeSystem";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PortfolioContent } from "@/types/content";
 
-export type ViewKey = "home" | "skills" | "projects" | "experience" | "certificates" | "education";
+export type ViewKey = "home" | "about" | "skills" | "projects" | "experience" | "certificates";
 
 interface PortfolioAppProps {
   initialContent: PortfolioContent;
@@ -18,11 +19,11 @@ interface PortfolioAppProps {
 
 const views: Array<{ key: ViewKey; label: string }> = [
   { key: "home", label: "Home" },
+  { key: "about", label: "About Me" },
   { key: "skills", label: "Skills" },
   { key: "projects", label: "Projects" },
   { key: "experience", label: "Experience" },
-  { key: "certificates", label: "Certificates" },
-  { key: "education", label: "Education" }
+  { key: "certificates", label: "Certificates" }
 ];
 
 function getViewHref(view: ViewKey) {
@@ -95,6 +96,184 @@ function SocialLinks({ content, className = "" }: { content: PortfolioContent["i
         <Share2 className="h-5 w-5" />
       </button>
     </div>
+  );
+}
+
+function RequiredPlaceholder({ label, multiline = false }: { label: string; multiline?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "pointer-events-none absolute left-3 text-sm text-zinc-400",
+        multiline ? "top-2.5" : "top-1/2 -translate-y-1/2"
+      )}
+    >
+      {label}
+      <sup className="ml-0.5 text-[0.68em] leading-none">*</sup>
+    </span>
+  );
+}
+
+function ContactModal({ email, onClose, open }: { email: string; onClose: () => void; open: boolean }) {
+  const [form, setForm] = useState({
+    company: "",
+    contactNumber: "",
+    email: "",
+    fullName: "",
+    message: ""
+  });
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, open]);
+
+  const updateField = (field: keyof typeof form, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const body = [
+      `Full Name: ${form.fullName}`,
+      `Email: ${form.email}`,
+      `Contact Number: ${form.contactNumber}`,
+      form.company ? `Company/Organization: ${form.company}` : "",
+      "",
+      "Message:",
+      form.message
+    ]
+      .filter((line) => line !== "")
+      .join("\n");
+
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent("Portfolio contact request")}&body=${encodeURIComponent(body)}`;
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          aria-labelledby="contact-modal-title"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          role="dialog"
+        >
+          <button
+            aria-label="Close contact form"
+            className="absolute inset-0 bg-white/70 backdrop-blur-sm"
+            onClick={onClose}
+            type="button"
+          />
+
+          <motion.div
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative z-10 max-h-[92vh] w-full max-w-[620px] overflow-y-auto rounded-md border border-zinc-950 bg-white p-6 text-zinc-950 shadow-[0_24px_80px_rgba(0,0,0,0.22)] md:p-8"
+            exit={{ opacity: 0, scale: 0.98, y: 16 }}
+            initial={{ opacity: 0, scale: 0.98, y: 16 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <div className="flex items-start justify-between gap-5">
+              <div>
+                <h2 id="contact-modal-title" className="font-display text-2xl leading-none text-zinc-950">
+                  Connect
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">Send a quick message and I will get back to you.</p>
+              </div>
+              <button
+                aria-label="Close contact form"
+                className="grid h-9 w-9 shrink-0 place-items-center text-zinc-700 transition hover:text-zinc-950"
+                onClick={onClose}
+                type="button"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
+              <div className="relative">
+                <Input
+                  aria-label="Full Name"
+                  id="contact-full-name"
+                  onChange={(event) => updateField("fullName", event.target.value)}
+                  required
+                  value={form.fullName}
+                />
+                {!form.fullName ? <RequiredPlaceholder label="Full Name" /> : null}
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="relative">
+                  <Input
+                    aria-label="Contact Number"
+                    id="contact-number"
+                    onChange={(event) => updateField("contactNumber", event.target.value)}
+                    required
+                    type="tel"
+                    value={form.contactNumber}
+                  />
+                  {!form.contactNumber ? <RequiredPlaceholder label="Contact Number" /> : null}
+                </div>
+                <div className="relative">
+                  <Input
+                    aria-label="Email Address"
+                    id="contact-email"
+                    onChange={(event) => updateField("email", event.target.value)}
+                    required
+                    type="email"
+                    value={form.email}
+                  />
+                  {!form.email ? <RequiredPlaceholder label="Email Address" /> : null}
+                </div>
+              </div>
+
+              <div>
+                <Input
+                  aria-label="Company/Organization"
+                  id="contact-company"
+                  onChange={(event) => updateField("company", event.target.value)}
+                  placeholder="Company/Organization"
+                  value={form.company}
+                />
+              </div>
+
+              <div className="relative">
+                <Textarea
+                  aria-label="Message"
+                  id="contact-message"
+                  onChange={(event) => updateField("message", event.target.value)}
+                  required
+                  value={form.message}
+                />
+                {!form.message ? <RequiredPlaceholder label="Message" multiline /> : null}
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button onClick={onClose} type="button" variant="secondary">
+                  Cancel
+                </Button>
+                <Button className="border-zinc-950 bg-zinc-950 text-white hover:bg-black" type="submit">
+                  Send Message
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 
@@ -760,73 +939,240 @@ function ProjectsShowcase({ projects }: { projects: PortfolioContent["projects"]
   );
 }
 
-function FullSection({ title, children }: { title: string; children: ReactNode }) {
+function ExperienceTimeline({ items }: { items: PortfolioContent["experience"] }) {
+  if (items.length === 0) {
+    return (
+      <section className="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center py-10">
+        <p className="text-sm text-zinc-600">No experience entries yet.</p>
+      </section>
+    );
+  }
+
+  const handleExperienceWheel = (event: WheelEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.currentTarget.scrollLeft += event.deltaY || event.deltaX;
+  };
+
   return (
-    <section className="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center py-10">
-      <h2 className="font-display text-[clamp(2.8rem,8vw,5.5rem)] uppercase tracking-[0.08em] text-zinc-950">{title}</h2>
-      <div className="mt-8">{children}</div>
+    <section
+      className="flex min-h-full w-full items-center overflow-x-auto overflow-y-hidden py-10"
+      onWheel={handleExperienceWheel}
+    >
+      <div className="flex w-max items-center gap-6 px-[max(1rem,calc((100vw-1180px)/2))] md:gap-8">
+        {items.map((item) => (
+          <article
+            key={item.id}
+            className="flex h-[clamp(21rem,34vw,28rem)] w-[clamp(17rem,28vw,23rem)] shrink-0 flex-col justify-between overflow-hidden rounded-[1.5rem] border border-zinc-950 bg-zinc-950 p-7 text-white md:p-8"
+          >
+            <div>
+              <h3 className="text-[clamp(1rem,1.8vw,1.65rem)] font-semibold uppercase leading-tight tracking-normal text-white">
+                {item.role}
+              </h3>
+              <p className="mt-4 text-[clamp(0.8rem,1.25vw,1.05rem)] font-semibold uppercase leading-tight text-zinc-100">{item.company}</p>
+              <p className="mt-1 text-[clamp(0.75rem,1.1vw,0.95rem)] font-medium uppercase leading-tight text-zinc-300">{item.duration}</p>
+            </div>
+            <p className="max-h-[7.5rem] overflow-hidden text-sm leading-6 text-zinc-300">{item.description}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CertificatesGrid({ items }: { items: PortfolioContent["certificates"] }) {
+  return (
+    <section className="mx-auto flex min-h-[72vh] w-full max-w-[1180px] flex-col justify-start py-10">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {items.map((item, index) => {
+          const href = item.asset_url || "#";
+
+          return (
+            <a
+              key={item.id}
+              aria-disabled={!item.asset_url}
+              className={cn(
+                "group flex h-16 w-full items-center overflow-hidden rounded-md border border-zinc-950 bg-white px-6 text-zinc-950 shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition hover:bg-white hover:shadow-[0_16px_42px_rgba(0,0,0,0.1)]",
+                !item.asset_url && "pointer-events-none opacity-60"
+              )}
+              href={href}
+              rel="noreferrer"
+              target={item.asset_url ? "_blank" : undefined}
+            >
+              <span className="mr-5 w-10 shrink-0 text-sm font-semibold tabular-nums text-zinc-950 md:text-base">{index + 1}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold uppercase leading-tight tracking-normal md:text-base">{item.title}</span>
+                <span className="mt-1 block truncate text-xs font-medium uppercase leading-tight tracking-[0.16em] text-zinc-600">{item.issuer}</span>
+              </span>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+const achievementLayouts = [
+  "lg:left-[0.8%] lg:top-[4%]",
+  "lg:left-[0.8%] lg:top-[51%]",
+  "lg:left-[15.1%] lg:top-[22%]",
+  "lg:left-[29.4%] lg:top-[4%]",
+  "lg:left-[43.7%] lg:top-[22%]",
+  "lg:left-[58%] lg:top-[4%]",
+  "lg:left-[72.3%] lg:top-[22%]",
+  "lg:left-[86.4%] lg:top-[4%]",
+  "lg:left-[86.4%] lg:top-[51%]"
+];
+
+const achievementSlotCount = 9;
+
+function AchievementsSection({ items }: { items: PortfolioContent["achievements"] }) {
+  const achievements = items.filter((item) => item.title.trim() || item.image_url.trim());
+  const defaultAchievementTitle = "";
+  const [activeAchievementTitle, setActiveAchievementTitle] = useState(defaultAchievementTitle);
+  const slotCount = Math.min(achievementSlotCount, achievements.length);
+  const [activeSlotIndexes, setActiveSlotIndexes] = useState(() =>
+    Array.from({ length: achievementSlotCount }, (_, slotIndex) => slotIndex)
+  );
+  const [changingSlot, setChangingSlot] = useState<number | null>(null);
+
+  useEffect(() => {
+    setActiveSlotIndexes(Array.from({ length: achievementSlotCount }, (_, slotIndex) => slotIndex));
+    setChangingSlot(null);
+    setActiveAchievementTitle(defaultAchievementTitle);
+  }, [achievements.length]);
+
+  useEffect(() => {
+    if (achievements.length <= achievementSlotCount || slotCount === 0) {
+      return;
+    }
+
+    let slotCursor = 0;
+    let nextAchievementIndex = achievementSlotCount;
+    const intervalId = window.setInterval(() => {
+      const slotIndex = slotCursor % slotCount;
+      const incomingIndex = nextAchievementIndex % achievements.length;
+
+      setChangingSlot(slotIndex);
+      window.setTimeout(() => {
+        setActiveSlotIndexes((currentIndexes) =>
+          currentIndexes.map((currentIndex, index) => (index === slotIndex ? incomingIndex : currentIndex))
+        );
+        setChangingSlot(null);
+      }, 260);
+
+      slotCursor += 1;
+      nextAchievementIndex += 1;
+    }, 1850);
+
+    return () => window.clearInterval(intervalId);
+  }, [achievements.length, slotCount]);
+
+  if (achievements.length === 0) {
+    return null;
+  }
+
+  const visibleAchievements = activeSlotIndexes
+    .slice(0, slotCount)
+    .map((achievementIndex) => achievements[achievementIndex % achievements.length])
+    .filter(Boolean);
+
+  const showAchievementTitle = (title: string) => {
+    setActiveAchievementTitle(title.trim() || defaultAchievementTitle);
+  };
+
+  return (
+    <section className="relative left-1/2 mt-16 h-[min(39rem,calc(100vh-5.5rem))] min-h-[31rem] w-[calc(100vw-1rem)] max-w-[1280px] -translate-x-1/2 overflow-hidden py-4">
+      <div className="mx-auto grid max-w-[36rem] grid-cols-2 justify-items-center gap-x-5 gap-y-6 pb-40 sm:grid-cols-3 lg:absolute lg:inset-x-0 lg:top-0 lg:mx-0 lg:block lg:h-full lg:max-w-none lg:pb-0">
+        {visibleAchievements.map((item, index) => (
+          <button
+            key={`${index}-${item.id}`}
+            aria-label={`Show ${item.title || "achievement"} title`}
+            className={cn(
+              "group relative h-[clamp(8.6rem,22vw,10rem)] w-[clamp(6.4rem,16vw,7.6rem)] overflow-hidden rounded-md bg-black shadow-[0_18px_45px_rgba(0,0,0,0.14)] ring-1 ring-black/10 transition duration-200 hover:-translate-y-1 hover:ring-zinc-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-zinc-950 lg:absolute lg:h-[clamp(10rem,17.2vw,13.75rem)] lg:w-[clamp(7rem,12.8vw,10.4rem)]",
+              achievementLayouts[index]
+            )}
+            onClick={() => showAchievementTitle(item.title)}
+            onFocus={() => showAchievementTitle(item.title)}
+            onMouseEnter={() => showAchievementTitle(item.title)}
+            onMouseLeave={() => setActiveAchievementTitle(defaultAchievementTitle)}
+            onMouseOver={() => showAchievementTitle(item.title)}
+            onPointerEnter={() => showAchievementTitle(item.title)}
+            onPointerLeave={() => setActiveAchievementTitle(defaultAchievementTitle)}
+            onPointerMove={() => showAchievementTitle(item.title)}
+            type="button"
+          >
+            {item.image_url ? (
+              <motion.img
+                key={item.image_url}
+                alt={item.title || "Achievement"}
+                animate={{
+                  opacity: changingSlot === index ? 0.18 : 1,
+                  scaleX: changingSlot === index ? 0.18 : 1,
+                  filter: changingSlot === index ? "blur(5px)" : "blur(0px)"
+                }}
+                className="h-full w-full origin-center object-contain"
+                initial={{ opacity: 0, scaleX: 0.2, filter: "blur(5px)" }}
+                loading="lazy"
+                src={item.image_url}
+                transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+              />
+            ) : null}
+          </button>
+        ))}
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 mx-auto px-4 text-center">
+        <p className="text-xs font-bold uppercase tracking-[0.26em] text-zinc-950">Achievements</p>
+        <h2 className="mx-auto mt-3 flex min-h-[5rem] max-w-[46rem] items-start justify-center text-[clamp(1.75rem,3.8vw,3.25rem)] font-black leading-[0.95] tracking-normal text-zinc-950">
+          {activeAchievementTitle || "\u00a0"}
+        </h2>
+      </div>
+    </section>
+  );
+}
+
+function AboutMeSection({ content }: { content: PortfolioContent }) {
+  return (
+    <section className="mx-auto min-h-0 w-full max-w-[1600px] flex-1 overflow-y-auto overflow-x-hidden py-10">
+      <div className="mx-auto grid w-full max-w-[1180px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.78fr)] lg:items-start">
+        <div className="pt-2">
+          <p className="font-open-sans-light max-w-[46rem] whitespace-pre-line text-justify text-sm font-light leading-6 text-zinc-700">
+            {content.intro.intro}
+          </p>
+        </div>
+
+        <div className="pt-2 lg:pl-12 xl:pl-20">
+          <h2 className="font-display text-2xl leading-none text-zinc-950">Education</h2>
+
+          <ul className="mt-6 list-disc space-y-5 pl-5">
+            {content.education.map((item) => (
+              <li key={item.id} className="pl-2">
+                <h3 className="text-base font-semibold uppercase leading-tight text-zinc-950">{item.degree}</h3>
+                <p className="mt-1 text-sm font-medium uppercase leading-tight text-zinc-800">{item.institution}</p>
+                <p className="mt-1 text-sm leading-6 text-zinc-600">{item.duration}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <AchievementsSection items={content.achievements} />
     </section>
   );
 }
 
 function renderFullView(view: ViewKey, content: PortfolioContent) {
   switch (view) {
+    case "about":
+      return <AboutMeSection content={content} />;
     case "projects":
       return <ProjectsShowcase projects={content.projects} />;
     case "skills":
       return <SkillsShowcase skills={content.intro.skills} />;
     case "experience":
-      return (
-        <FullSection title="Experience">
-          <div className="space-y-4">
-            {content.experience.map((item) => (
-              <Card key={item.id} className="p-6">
-                <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                  <div>
-                    <h3 className="font-display text-2xl text-zinc-950">{item.role}</h3>
-                    <p className="theme-accent-text mt-1 text-sm uppercase tracking-[0.22em]">{item.company}</p>
-                  </div>
-                  <p className="text-sm text-zinc-500">{item.duration}</p>
-                </div>
-                <p className="mt-4 text-sm leading-7 text-zinc-600">{item.description}</p>
-              </Card>
-            ))}
-          </div>
-        </FullSection>
-      );
+      return <ExperienceTimeline items={content.experience} />;
     case "certificates":
-      return (
-        <FullSection title="Certificates">
-          <div className="grid gap-4 md:grid-cols-2">
-            {content.certificates.map((item) => (
-              <Card key={item.id} className="p-6">
-                <h3 className="font-display text-2xl text-zinc-950">{item.title}</h3>
-                <p className="theme-accent-text mt-2 text-sm uppercase tracking-[0.22em]">{item.issuer}</p>
-                <p className="mt-4 text-sm text-zinc-500">{item.year}</p>
-              </Card>
-            ))}
-          </div>
-        </FullSection>
-      );
-    case "education":
-      return (
-        <FullSection title="Education">
-          <div className="space-y-4">
-            {content.education.map((item) => (
-              <Card key={item.id} className="p-6">
-                <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                  <div>
-                    <h3 className="font-display text-2xl text-zinc-950">{item.degree}</h3>
-                    <p className="theme-accent-text mt-1 text-sm uppercase tracking-[0.22em]">{item.institution}</p>
-                  </div>
-                  <p className="text-sm text-zinc-500">{item.duration}</p>
-                </div>
-                <p className="mt-4 text-sm leading-7 text-zinc-600">{item.description}</p>
-              </Card>
-            ))}
-          </div>
-        </FullSection>
-      );
+      return <CertificatesGrid items={content.certificates} />;
     default:
       return null;
   }
@@ -835,15 +1181,18 @@ function renderFullView(view: ViewKey, content: PortfolioContent) {
 export function PortfolioApp({ initialContent, initialView = "home" }: PortfolioAppProps) {
   const activeView = initialView;
   const content = useMemo(() => initialContent, [initialContent]);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
   const themeStyle = useMemo(() => getThemeStyle(PORTFOLIO_THEMES[DEFAULT_THEME_INDEX]), []);
+  const showFadedRoleBackground = ["home", "about", "experience", "certificates"].includes(activeView);
 
   return (
     <main className="theme-shell relative min-h-screen overflow-hidden text-zinc-950" style={themeStyle}>
-      <div className="theme-hero-grid absolute inset-0" />
+      <ContactModal email={content.intro.email} onClose={() => setContactModalOpen(false)} open={contactModalOpen} />
+      {activeView === "experience" ? null : <div className="theme-hero-grid absolute inset-0" />}
       <div className="theme-hero-spotlight absolute inset-0 opacity-60" />
       <div className="theme-top-glow absolute inset-0 opacity-40" />
-      {activeView === "home" ? (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {showFadedRoleBackground ? (
+        <div className={cn("pointer-events-none inset-0 overflow-hidden", activeView === "about" ? "fixed" : "absolute")}>
           <div className="font-faded-display pointer-events-none absolute left-1/2 top-[12%] z-0 flex w-max -translate-x-1/2 flex-col items-center text-center text-[clamp(6rem,22vw,20rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950/[0.035]">
             <span className="block text-center">WEB</span>
             <span className="block text-center">DEVELOPER</span>
@@ -873,11 +1222,9 @@ export function PortfolioApp({ initialContent, initialView = "home" }: Portfolio
 
           <div className="ml-auto flex flex-wrap items-center justify-end gap-4 md:gap-5">
             <SocialLinks className="flex items-center justify-end gap-4 md:gap-5" content={content.intro} />
-            <a href={`mailto:${content.intro.email}`}>
-              <Button type="button" variant="secondary">
-                Connect
-              </Button>
-            </a>
+            <Button onClick={() => setContactModalOpen(true)} type="button" variant="secondary">
+              Connect
+            </Button>
             <a download href={content.intro.resume_url || "#"}>
               <Button className="min-w-[140px] border-zinc-950 bg-zinc-950 text-sm text-white hover:bg-black">
                 <span>Get Resume</span>
@@ -939,24 +1286,12 @@ export function PortfolioApp({ initialContent, initialView = "home" }: Portfolio
                       <ArrowUpRight className="h-4 w-4" />
                     </Button>
                   </a>
-                  <a href={`mailto:${content.intro.email}`}>
-                    <Button type="button" variant="secondary">
-                      Connect
-                    </Button>
-                  </a>
+                  <Button onClick={() => setContactModalOpen(true)} type="button" variant="secondary">
+                    Connect
+                  </Button>
                 </div>
               </motion.div>
 
-              <motion.div
-                animate={{ opacity: 1, x: 0 }}
-                className="profile-copy-panel pointer-events-auto order-4 relative z-20 max-w-[32rem] text-left lg:absolute lg:bottom-4 xl:bottom-8"
-                initial={{ opacity: 0, x: 22 }}
-                transition={{ duration: 0.5, delay: 0.24, ease: "easeOut" }}
-              >
-                <p className="theme-faint-copy text-sm font-light leading-7 tracking-[0.01em] md:text-[0.95rem]">
-                  {content.intro.intro}
-                </p>
-              </motion.div>
             </motion.div>
           ) : (
             <motion.div

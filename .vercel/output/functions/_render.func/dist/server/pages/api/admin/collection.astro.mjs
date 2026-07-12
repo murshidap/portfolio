@@ -1,15 +1,18 @@
-import { g as getAdminUserFromRequest, a as getServiceSupabase } from '../../../chunks/auth_BMTa4l8E.mjs';
+import { i as isSameOriginAdminRequest, f as forbiddenResponse, g as getAdminUserFromRequest, a as getAdminServerSupabase } from '../../../chunks/auth_B79Sfj4C.mjs';
 export { renderers } from '../../../renderers.mjs';
 
-const allowedTables = /* @__PURE__ */ new Set(["projects", "experience", "certificates", "education"]);
+const allowedTables = /* @__PURE__ */ new Set(["projects", "experience", "certificates", "achievements", "education"]);
 const POST = async ({ request }) => {
+  if (!isSameOriginAdminRequest(request)) {
+    return forbiddenResponse();
+  }
   const user = await getAdminUserFromRequest(request);
   if (!user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
-  const supabase = getServiceSupabase();
+  const supabase = getAdminServerSupabase(request);
   if (!supabase) {
-    return new Response(JSON.stringify({ error: "Supabase service role key is missing." }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Supabase server credentials are missing." }), { status: 500 });
   }
   const { table, rows } = await request.json();
   if (!allowedTables.has(String(table))) {
@@ -22,13 +25,16 @@ const POST = async ({ request }) => {
   return new Response(JSON.stringify({ success: true }), { status: 200 });
 };
 const DELETE = async ({ request }) => {
+  if (!isSameOriginAdminRequest(request)) {
+    return forbiddenResponse();
+  }
   const user = await getAdminUserFromRequest(request);
   if (!user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
-  const supabase = getServiceSupabase();
+  const supabase = getAdminServerSupabase(request);
   if (!supabase) {
-    return new Response(JSON.stringify({ error: "Supabase service role key is missing." }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Supabase server credentials are missing." }), { status: 500 });
   }
   const { table, id } = await request.json();
   if (!allowedTables.has(String(table))) {

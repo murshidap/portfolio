@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500" role="img" aria-labelledby="title desc">
+  <title id="title">Community contribution abstract network</title>
+  <desc id="desc">A wide network of connected contribution nodes.</desc>
+  <rect x="70" y="62" width="660" height="376" rx="38" fill="#f8fafc"/>
+  <path d="M218 256l144-96 156 74M362 160l34 178M396 338l122-104M218 256l178 82" stroke="#111827" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="218" cy="256" r="44" fill="#22c55e"/>
+  <circle cx="362" cy="160" r="44" fill="#38bdf8"/>
+  <circle cx="518" cy="234" r="44" fill="#f97316"/>
+  <circle cx="396" cy="338" r="44" fill="#a78bfa"/>
+</svg>

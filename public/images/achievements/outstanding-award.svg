@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="620" viewBox="0 0 620 620" role="img" aria-labelledby="title desc">
+  <title id="title">Outstanding award abstract medallion</title>
+  <desc id="desc">A square abstract award medallion.</desc>
+  <rect x="74" y="74" width="472" height="472" rx="48" fill="#f8fafc"/>
+  <circle cx="310" cy="290" r="150" fill="#fde68a"/>
+  <circle cx="310" cy="290" r="102" fill="#f59e0b"/>
+  <path d="M310 174l35 72 79 12-57 56 14 79-71-37-71 37 14-79-57-56 79-12z" fill="#111827"/>
+  <path d="M246 414l-40 116 104-54 104 54-40-116" fill="#f97316"/>
+</svg>
