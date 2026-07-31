@@ -5,7 +5,6 @@ export const defaultContent: PortfolioContent = {
     id: "intro-default",
     name: "MURSHIDA P.",
     role: "Web Developer",
-    skills: ["Astro", "React", "Tailwind CSS", "Supabase"],
     intro:
       "I am a web developer with a BSc in Computer Science and professional experience working as a Junior Web Developer. I specialize in building modern, responsive, and interactive websites that combine strong visual design with clean, scalable, and reliable development.\n\nI enjoy turning ideas and design concepts into functional websites through thoughtful layouts, smooth interactions, and well-structured code.\n\nAlongside my work in web development, I am currently pursuing an MSc in Computer Science with a specialization in Data Analytics. I am committed to improving my skills, exploring modern technologies, and building web experiences that are both creative and practical.",
     email: "murshida@example.com",
@@ -15,11 +14,16 @@ export const defaultContent: PortfolioContent = {
     resume_url: "",
     profile_image_url: "/images/profile-picture.png"
   },
+  skills: [
+    { id: "skill-astro", title: "Astro", icon_url: "" },
+    { id: "skill-react", title: "React", icon_url: "" },
+    { id: "skill-tailwind", title: "Tailwind CSS", icon_url: "" },
+    { id: "skill-supabase", title: "Supabase", icon_url: "" }
+  ],
   projects: [
     {
       id: "project-1",
       title: "Portfolio System",
-      subtitle: "Astro + Supabase",
       description:
         "A responsive portfolio platform with admin-driven content, glowing visuals, and premium motion.",
       stack: ["Astro", "React", "Supabase"],
@@ -30,7 +34,6 @@ export const defaultContent: PortfolioContent = {
     {
       id: "project-2",
       title: "Design Clone",
-      subtitle: "Reference-perfect UI",
       description:
         "A polished landing experience recreated with careful spacing, gradients, and glassmorphism.",
       stack: ["Tailwind", "Framer Motion"],

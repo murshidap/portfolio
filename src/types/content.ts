@@ -4,7 +4,6 @@ export interface IntroContent {
   id: string;
   name: string;
   role: string;
-  skills: string[];
   intro: string;
   email: string;
   phone: string;
@@ -14,10 +13,15 @@ export interface IntroContent {
   profile_image_url: string;
 }
 
+export interface SkillItem {
+  id: string;
+  title: string;
+  icon_url: string;
+}
+
 export interface ProjectItem {
   id: string;
   title: string;
-  subtitle: string;
   description: string;
   stack: string[];
   project_url: string;
@@ -57,6 +61,7 @@ export interface EducationItem {
 
 export interface PortfolioContent {
   intro: IntroContent;
+  skills: SkillItem[];
   projects: ProjectItem[];
   experience: ExperienceItem[];
   certificates: CertificateItem[];

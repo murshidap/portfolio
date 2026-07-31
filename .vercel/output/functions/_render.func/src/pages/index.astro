@@ -1,11 +1,11 @@
 ---
-import { PortfolioApp } from "@/components/portfolio/PortfolioApp";
+import HomePage from "@/components/portfolio/HomePage";
+import PortfolioShell from "@/components/portfolio/PortfolioShell.astro";
 import { fetchPortfolioContent } from "@/lib/server/content";
-import BaseLayout from "@/layouts/BaseLayout.astro";
 
 const initialContent = await fetchPortfolioContent();
 ---
 
-<BaseLayout title="Murshida P. | Web Developer">
-  <PortfolioApp client:load initialContent={initialContent} initialView="home" />
-</BaseLayout>
+<PortfolioShell activeView="home" intro={initialContent.intro} title="Web Developer">
+  <HomePage client:load intro={initialContent.intro} />
+</PortfolioShell>

@@ -1,5 +1,13 @@
 ---
-import PortfolioPage from "@/components/portfolio/PortfolioPage.astro";
+import ExperiencePage from "@/components/portfolio/ExperiencePage.astro";
+import PortfolioShell from "@/components/portfolio/PortfolioShell.astro";
+import { fetchPortfolioContent } from "@/lib/server/content";
+
+const initialContent = await fetchPortfolioContent();
 ---
 
-<PortfolioPage title="Experience" view="experience" />
+<PortfolioShell activeView="experience" intro={initialContent.intro} title="Experience">
+  <div class="relative z-0 flex min-h-0 flex-1 overflow-hidden">
+    <ExperiencePage items={initialContent.experience} />
+  </div>
+</PortfolioShell>

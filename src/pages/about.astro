@@ -1,5 +1,13 @@
 ---
-import PortfolioPage from "@/components/portfolio/PortfolioPage.astro";
+import AboutPage from "@/components/portfolio/AboutPage.astro";
+import PortfolioShell from "@/components/portfolio/PortfolioShell.astro";
+import { fetchPortfolioContent } from "@/lib/server/content";
+
+const initialContent = await fetchPortfolioContent();
 ---
 
-<PortfolioPage title="About Me" view="about" />
+<PortfolioShell activeView="about" intro={initialContent.intro} title="About Me">
+  <div class="relative z-0 flex min-h-0 flex-1 overflow-hidden">
+    <AboutPage content={initialContent} />
+  </div>
+</PortfolioShell>

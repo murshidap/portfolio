@@ -1,7 +1,8 @@
 import { i as isSameOriginAdminRequest, f as forbiddenResponse, g as getAdminUserFromRequest, a as getAdminServerSupabase } from '../../../chunks/auth_B79Sfj4C.mjs';
 export { renderers } from '../../../renderers.mjs';
 
-const allowedTables = /* @__PURE__ */ new Set(["projects", "experience", "certificates", "achievements", "education"]);
+const allowedTables = /* @__PURE__ */ new Set(["skills", "projects", "experience", "certificates", "achievements", "education"]);
+const achievementMaxCount = 4;
 const POST = async ({ request }) => {
   if (!isSameOriginAdminRequest(request)) {
     return forbiddenResponse();
@@ -18,7 +19,11 @@ const POST = async ({ request }) => {
   if (!allowedTables.has(String(table))) {
     return new Response(JSON.stringify({ error: "Invalid collection." }), { status: 400 });
   }
-  const { error } = await supabase.from(String(table)).upsert(Array.isArray(rows) ? rows : []);
+  const normalizedRows = Array.isArray(rows) ? rows : [];
+  if (String(table) === "achievements" && normalizedRows.length > achievementMaxCount) {
+    return new Response(JSON.stringify({ error: `Only ${achievementMaxCount} achievements can be uploaded.` }), { status: 400 });
+  }
+  const { error } = await supabase.from(String(table)).upsert(normalizedRows);
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 400 });
   }
