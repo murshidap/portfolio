@@ -7,8 +7,36 @@ import {
   isSameOriginAdminRequest
 } from "@/lib/server/auth";
 
-const allowedTables = new Set(["skills", "projects", "experience", "certificates", "achievements", "education"]);
-const achievementMaxCount = 4;
+const allowedTables = new Set(["skills", "projects", "experience", "certificates", "achievements", "activities", "education"]);
+function hasPersistedId(value: unknown) {
+  return (typeof value === "string" && value.trim().length > 0) || (typeof value === "number" && Number.isFinite(value));
+}
+
+function ensureRowMetadata(row: Record<string, unknown>, table: string) {
+  const normalizedProject = table === "projects"
+    ? {
+        ...row,
+        subtitle: row.subtitle ?? "",
+        updated_at: typeof row.updated_at === "string" && row.updated_at.trim() ? row.updated_at : new Date().toISOString()
+      }
+    : row;
+  const normalizedRow = hasPersistedId(row.id)
+    ? normalizedProject
+    : {
+        ...normalizedProject,
+        id: crypto.randomUUID()
+      };
+
+  const rowWithCreatedAt = {
+    ...normalizedRow,
+    created_at:
+      typeof normalizedRow.created_at === "string" && normalizedRow.created_at.trim()
+        ? normalizedRow.created_at
+        : new Date().toISOString(),
+  };
+
+  return table === "education" ? { ...rowWithCreatedAt, updated_at: new Date().toISOString() } : rowWithCreatedAt;
+}
 
 export const POST: APIRoute = async ({ request }) => {
   if (!isSameOriginAdminRequest(request)) {
@@ -30,12 +58,14 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: "Invalid collection." }), { status: 400 });
   }
 
-  const normalizedRows = Array.isArray(rows) ? rows : [];
-  if (String(table) === "achievements" && normalizedRows.length > achievementMaxCount) {
-    return new Response(JSON.stringify({ error: `Only ${achievementMaxCount} achievements can be uploaded.` }), { status: 400 });
-  }
+  const normalizedRows = Array.isArray(rows) ? rows.filter(Boolean).map((row) => {
+    if (row && typeof row === "object") {
+      return ensureRowMetadata(row as Record<string, unknown>, String(table));
+    }
 
-  const { error } = await supabase.from(String(table)).upsert(normalizedRows);
+    return row;
+  }) : [];
+  const { error } = await supabase.from(String(table)).upsert(normalizedRows, { onConflict: "id" });
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 400 });
   }

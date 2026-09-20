@@ -22,6 +22,7 @@ export interface SkillItem {
 export interface ProjectItem {
   id: string;
   title: string;
+  subtitle: string;
   description: string;
   stack: string[];
   project_url: string;
@@ -51,6 +52,12 @@ export interface AchievementItem {
   image_url: string;
 }
 
+export interface ActivityItem {
+  id: string;
+  title: string;
+  image_url: string;
+}
+
 export interface EducationItem {
   id: string;
   institution: string;
@@ -66,5 +73,6 @@ export interface PortfolioContent {
   experience: ExperienceItem[];
   certificates: CertificateItem[];
   achievements: AchievementItem[];
+  activities: ActivityItem[];
   education: EducationItem[];
 }

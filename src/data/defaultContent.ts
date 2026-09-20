@@ -24,6 +24,7 @@ export const defaultContent: PortfolioContent = {
     {
       id: "project-1",
       title: "Portfolio System",
+      subtitle: "",
       description:
         "A responsive portfolio platform with admin-driven content, glowing visuals, and premium motion.",
       stack: ["Astro", "React", "Supabase"],
@@ -34,6 +35,7 @@ export const defaultContent: PortfolioContent = {
     {
       id: "project-2",
       title: "Design Clone",
+      subtitle: "",
       description:
         "A polished landing experience recreated with careful spacing, gradients, and glassmorphism.",
       stack: ["Tailwind", "Framer Motion"],
@@ -110,6 +112,48 @@ export const defaultContent: PortfolioContent = {
       id: "achievement-10",
       title: "Outstanding Award",
       image_url: "/images/achievements/outstanding-award.svg"
+    }
+  ],
+  activities: [
+    {
+      id: "activity-1",
+      title: "Campus Event",
+      image_url: "/images/achievements/academic-excellence.svg"
+    },
+    {
+      id: "activity-2",
+      title: "Web Workshop",
+      image_url: "/images/achievements/web-award.svg"
+    },
+    {
+      id: "activity-3",
+      title: "Data Session",
+      image_url: "/images/achievements/data-milestone.svg"
+    },
+    {
+      id: "activity-4",
+      title: "Project Day",
+      image_url: "/images/achievements/project-showcase.svg"
+    },
+    {
+      id: "activity-5",
+      title: "Hackathon",
+      image_url: "/images/achievements/hackathon-finalist.svg"
+    },
+    {
+      id: "activity-6",
+      title: "Creative Coding",
+      image_url: "/images/achievements/creative-coding.svg"
+    },
+    {
+      id: "activity-7",
+      title: "Certification",
+      image_url: "/images/achievements/certification-path.svg"
+    },
+    {
+      id: "activity-8",
+      title: "Community Work",
+      image_url: "/images/achievements/community-contribution.svg"
     }
   ],
   education: [

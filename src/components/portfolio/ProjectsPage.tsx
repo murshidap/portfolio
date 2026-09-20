@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type WheelEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type TouchEvent, type WheelEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import type { ProjectItem } from "@/types/content";
@@ -39,7 +39,7 @@ function getProjectCellIndex(project: ProjectItem, availableCells: number[], use
 
 const projectGridColumns = 27;
 const projectGridRows = 15;
-const projectWheelQuietDelay = 420;
+const projectWheelQuietDelay = 300;
 
 export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) {
   const [focusedProjectIndex, setFocusedProjectIndex] = useState(0);
@@ -48,20 +48,12 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
   const sectionRef = useRef<HTMLElement | null>(null);
   const projectGridRef = useRef<HTMLDivElement | null>(null);
   const projectSpotlightRef = useRef<HTMLDivElement | null>(null);
-  const wheelLockRef = useRef(false);
-  const wheelLockTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const lastWheelTimeRef = useRef(0);
+  const touchStartYRef = useRef<number | null>(null);
 
   useEffect(() => {
     setFocusedProjectIndex(0);
   }, [projects.length]);
-
-  useEffect(() => {
-    return () => {
-      if (wheelLockTimeoutRef.current) {
-        window.clearTimeout(wheelLockTimeoutRef.current);
-      }
-    };
-  }, []);
 
   if (projects.length === 0) {
     return null;
@@ -176,34 +168,52 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
 
     event.preventDefault();
 
-    if (wheelLockRef.current || event.deltaY === 0) {
+    if (event.deltaY === 0) {
       return;
     }
 
-    if (wheelLockTimeoutRef.current) {
-      window.clearTimeout(wheelLockTimeoutRef.current);
+    const now = performance.now();
+    if (now - lastWheelTimeRef.current < projectWheelQuietDelay) {
+      return;
     }
 
-    wheelLockRef.current = true;
-    setFocusedProjectIndex((currentIndex) => {
-      if (event.deltaY > 0) {
-        return Math.min(projects.length - 1, currentIndex + 1);
-      }
+    lastWheelTimeRef.current = now;
+    const direction = event.deltaY > 0 ? 1 : -1;
+    setFocusedProjectIndex((currentIndex) => Math.min(projects.length - 1, Math.max(0, currentIndex + direction)));
+  };
 
-      if (event.deltaY < 0) {
-        return Math.max(0, currentIndex - 1);
-      }
+  const handleProjectSwipe = (direction: 1 | -1) => {
+    if (projects.length <= 1) {
+      return;
+    }
 
-      return currentIndex;
-    });
-    wheelLockTimeoutRef.current = window.setTimeout(() => {
-      wheelLockRef.current = false;
-      wheelLockTimeoutRef.current = null;
-    }, projectWheelQuietDelay);
+    setFocusedProjectIndex((currentIndex) => Math.min(projects.length - 1, Math.max(0, currentIndex + direction)));
+  };
+
+  const handleProjectTouchStart = (event: TouchEvent<HTMLElement>) => {
+    touchStartYRef.current = event.touches[0]?.clientY ?? null;
+  };
+
+  const handleProjectTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const startY = touchStartYRef.current;
+    const endY = event.changedTouches[0]?.clientY;
+    touchStartYRef.current = null;
+
+    if (startY === null || endY === undefined || Math.abs(endY - startY) < 48) {
+      return;
+    }
+
+    handleProjectSwipe(endY < startY ? 1 : -1);
   };
 
   return (
-    <section ref={sectionRef} className="fixed inset-x-0 bottom-0 top-[7.25rem] z-0 flex items-center overflow-hidden py-10" onWheel={handleProjectWheel}>
+    <section
+      ref={sectionRef}
+      className="fixed inset-x-0 bottom-0 top-[7.25rem] z-0 flex items-center overflow-hidden py-10 touch-pan-y"
+      onTouchEnd={handleProjectTouchEnd}
+      onTouchStart={handleProjectTouchStart}
+      onWheel={handleProjectWheel}
+    >
       <motion.div
         ref={projectGridRef}
         animate={projectGridOffset}

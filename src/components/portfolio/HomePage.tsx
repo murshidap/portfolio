@@ -24,7 +24,7 @@ export default function HomePage({ intro }: { intro: IntroContent }) {
       <section className="order-1 relative z-10 min-h-[420px] lg:absolute lg:inset-x-0 lg:top-[4.5rem] lg:min-h-0">
         <div className="pointer-events-none flex justify-center">
           <div className="relative mt-10 flex w-full max-w-[680px] flex-col items-center md:mt-14 md:max-w-[760px] lg:mt-0 lg:max-w-[860px]">
-            <div className="font-rostex-regular mb-[-1.5rem] translate-y-8 text-center text-[clamp(3.4rem,9vw,8.2rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950 lg:mb-[-2.5rem] lg:translate-y-14">
+            <div className="font-rostex-regular relative z-20 mb-[-1.5rem] translate-y-8 text-center text-[clamp(3.4rem,9vw,8.2rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950 lg:mb-[-2.5rem] lg:translate-y-14">
               {roleWords.map((word, index) =>
                 index === roleWords.length - 1 ? (
                   <span key={`${word}-${index}`} className="relative inline-block">
@@ -39,14 +39,14 @@ export default function HomePage({ intro }: { intro: IntroContent }) {
               )}
             </div>
             <div className="theme-portrait-orb absolute bottom-[8%] left-[10%] right-[10%] top-[6%]" />
-            <div className="relative z-10 -mt-20 w-full md:-mt-24 lg:-mt-32">
+            <div className="relative z-30 -mt-20 w-full md:-mt-24 lg:-mt-32">
               <div className="pointer-events-none absolute bottom-[6%] left-1/2 h-[64%] w-[58%] -translate-x-1/2 rounded-full bg-black/30 blur-3xl" />
               <motion.img
                 alt="Murshida portrait"
                 animate={{ opacity: 1, y: 0 }}
                 className="relative z-10 mx-auto w-full max-w-[620px] object-contain grayscale md:max-w-[700px] lg:max-w-[800px]"
                 initial={{ opacity: 0, y: 28 }}
-                src={intro.profile_image_url}
+                src={intro.profile_image_url || "/images/profile-picture.png"}
                 transition={{ duration: 0.7, ease: "easeOut" }}
               />
             </div>

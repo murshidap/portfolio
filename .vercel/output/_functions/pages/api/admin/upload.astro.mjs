@@ -1,8 +1,8 @@
 import { i as isSameOriginAdminRequest, f as forbiddenResponse, g as getAdminUserFromRequest, a as getAdminServerSupabase } from '../../../chunks/auth_B79Sfj4C.mjs';
-import { d as defaultContent } from '../../../chunks/defaultContent_wXX362n0.mjs';
+import { d as defaultContent } from '../../../chunks/defaultContent_Cj_9S1DA.mjs';
 export { renderers } from '../../../renderers.mjs';
 
-const allowedFolders = /* @__PURE__ */ new Set(["intro", "skills", "projects", "experience", "certificates", "achievements", "education", "resume"]);
+const allowedFolders = /* @__PURE__ */ new Set(["intro", "skills", "projects", "experience", "certificates", "achievements", "activities", "education", "resume"]);
 const allowedImageTypes = /* @__PURE__ */ new Map([
   ["image/avif", "avif"],
   ["image/gif", "gif"],
@@ -12,6 +12,72 @@ const allowedImageTypes = /* @__PURE__ */ new Map([
 ]);
 const maxImageFileSize = 8 * 1024 * 1024;
 const maxResumeFileSize = 10 * 1024 * 1024;
+function readUint24LittleEndian(bytes, offset) {
+  return bytes[offset] | bytes[offset + 1] << 8 | bytes[offset + 2] << 16;
+}
+function getImageDimensions(arrayBuffer, mimeType) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
+  if (mimeType === "image/png" && bytes.length >= 24) {
+    return {
+      width: view.getUint32(16),
+      height: view.getUint32(20)
+    };
+  }
+  if (mimeType === "image/gif" && bytes.length >= 10) {
+    return {
+      width: view.getUint16(6, true),
+      height: view.getUint16(8, true)
+    };
+  }
+  if (mimeType === "image/jpeg" && bytes.length >= 4 && bytes[0] === 255 && bytes[1] === 216) {
+    let offset = 2;
+    while (offset + 9 < bytes.length) {
+      if (bytes[offset] !== 255) {
+        offset += 1;
+        continue;
+      }
+      const marker = bytes[offset + 1];
+      const segmentLength = view.getUint16(offset + 2);
+      const isStartOfFrameMarker = marker >= 192 && marker <= 195 || marker >= 197 && marker <= 199 || marker >= 201 && marker <= 203 || marker >= 205 && marker <= 207;
+      if (isStartOfFrameMarker && offset + 8 < bytes.length) {
+        return {
+          width: view.getUint16(offset + 7),
+          height: view.getUint16(offset + 5)
+        };
+      }
+      offset += 2 + segmentLength;
+    }
+  }
+  if (mimeType === "image/webp" && bytes.length >= 30) {
+    const riff = String.fromCharCode(...bytes.slice(0, 4));
+    const webp = String.fromCharCode(...bytes.slice(8, 12));
+    const chunk = String.fromCharCode(...bytes.slice(12, 16));
+    if (riff !== "RIFF" || webp !== "WEBP") {
+      return null;
+    }
+    if (chunk === "VP8X") {
+      return {
+        width: readUint24LittleEndian(bytes, 24) + 1,
+        height: readUint24LittleEndian(bytes, 27) + 1
+      };
+    }
+    if (chunk === "VP8 " && bytes.length >= 30) {
+      return {
+        width: view.getUint16(26, true) & 16383,
+        height: view.getUint16(28, true) & 16383
+      };
+    }
+    if (chunk === "VP8L" && bytes.length >= 25) {
+      const bits = view.getUint32(21, true);
+      return {
+        width: (bits & 16383) + 1,
+        height: (bits >> 14 & 16383) + 1
+      };
+    }
+  }
+  return null;
+}
 function getStoragePathFromPublicUrl(publicUrl) {
   try {
     const pathname = new URL(publicUrl).pathname;
@@ -65,6 +131,12 @@ const POST = async ({ request }) => {
   }
   const path = isResumeUpload ? `resume/resume-${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}` : `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
   const arrayBuffer = await file.arrayBuffer();
+  if (folder === "activities") {
+    const dimensions = getImageDimensions(arrayBuffer, file.type);
+    if (!dimensions || dimensions.width !== dimensions.height) {
+      return new Response(JSON.stringify({ error: "Activity photos must be square 1:1 images." }), { status: 400 });
+    }
+  }
   const { error } = await supabase.storage.from("portfolio-assets").upload(path, arrayBuffer, {
     cacheControl: isResumeUpload ? "0" : "3600",
     upsert: false,

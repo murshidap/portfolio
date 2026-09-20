@@ -4,9 +4,9 @@ import { jsx, jsxs } from 'react/jsx-runtime';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { useState } from 'react';
-import { C as ContactModal, P as PORTFOLIO_THEMES, D as DEFAULT_THEME_INDEX, $ as $$PortfolioShell } from '../chunks/PortfolioShell_s9hWfDyt.mjs';
-import { B as Button } from '../chunks/BaseLayout_Dif1Ba7Q.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_Cl0kQkyE.mjs';
+import { C as ContactModal, P as PORTFOLIO_THEMES, D as DEFAULT_THEME_INDEX, $ as $$PortfolioShell } from '../chunks/PortfolioShell_CQL5CkHf.mjs';
+import { B as Button } from '../chunks/BaseLayout_k0i_bco2.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 export { renderers } from '../renderers.mjs';
 
 function ConstellationWidget({ activeIndex, themes }) {
@@ -99,14 +99,14 @@ function HomePage({ intro }) {
       children: [
         /* @__PURE__ */ jsx(ContactModal, { email: intro.email, onClose: () => setContactModalOpen(false), open: contactModalOpen }),
         /* @__PURE__ */ jsx("section", { className: "order-1 relative z-10 min-h-[420px] lg:absolute lg:inset-x-0 lg:top-[4.5rem] lg:min-h-0", children: /* @__PURE__ */ jsx("div", { className: "pointer-events-none flex justify-center", children: /* @__PURE__ */ jsxs("div", { className: "relative mt-10 flex w-full max-w-[680px] flex-col items-center md:mt-14 md:max-w-[760px] lg:mt-0 lg:max-w-[860px]", children: [
-          /* @__PURE__ */ jsx("div", { className: "font-rostex-regular mb-[-1.5rem] translate-y-8 text-center text-[clamp(3.4rem,9vw,8.2rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950 lg:mb-[-2.5rem] lg:translate-y-14", children: roleWords.map(
+          /* @__PURE__ */ jsx("div", { className: "font-rostex-regular relative z-20 mb-[-1.5rem] translate-y-8 text-center text-[clamp(3.4rem,9vw,8.2rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950 lg:mb-[-2.5rem] lg:translate-y-14", children: roleWords.map(
             (word, index) => index === roleWords.length - 1 ? /* @__PURE__ */ jsxs("span", { className: "relative inline-block", children: [
               /* @__PURE__ */ jsx("span", { className: "inline-block", children: word.toUpperCase() }),
               /* @__PURE__ */ jsx(ConstellationWidget, { activeIndex: DEFAULT_THEME_INDEX, themes: PORTFOLIO_THEMES })
             ] }, `${word}-${index}`) : /* @__PURE__ */ jsx("span", { className: index === 0 ? "block text-[1.12em]" : "block", children: word.toUpperCase() }, `${word}-${index}`)
           ) }),
           /* @__PURE__ */ jsx("div", { className: "theme-portrait-orb absolute bottom-[8%] left-[10%] right-[10%] top-[6%]" }),
-          /* @__PURE__ */ jsxs("div", { className: "relative z-10 -mt-20 w-full md:-mt-24 lg:-mt-32", children: [
+          /* @__PURE__ */ jsxs("div", { className: "relative z-30 -mt-20 w-full md:-mt-24 lg:-mt-32", children: [
             /* @__PURE__ */ jsx("div", { className: "pointer-events-none absolute bottom-[6%] left-1/2 h-[64%] w-[58%] -translate-x-1/2 rounded-full bg-black/30 blur-3xl" }),
             /* @__PURE__ */ jsx(
               motion.img,
@@ -115,7 +115,7 @@ function HomePage({ intro }) {
                 animate: { opacity: 1, y: 0 },
                 className: "relative z-10 mx-auto w-full max-w-[620px] object-contain grayscale md:max-w-[700px] lg:max-w-[800px]",
                 initial: { opacity: 0, y: 28 },
-                src: intro.profile_image_url,
+                src: intro.profile_image_url || "/images/profile-picture.png",
                 transition: { duration: 0.7, ease: "easeOut" }
               }
             )

@@ -1,4 +1,3 @@
-import { Play } from "lucide-react";
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -65,9 +64,6 @@ function AchievementCardBody({ imageIndex, item }: { imageIndex: number; item: A
         ) : (
           <PlaceholderPanel index={imageIndex % placeholderPanels.length} />
         )}
-        <span className="pointer-events-none absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/72 text-white shadow-[0_10px_26px_rgba(15,23,42,0.16)] backdrop-blur-sm">
-          <Play aria-hidden="true" className="ml-1 h-8 w-8 fill-white text-white" />
-        </span>
       </div>
 
       <span className="mt-auto pb-2" aria-hidden="true" />

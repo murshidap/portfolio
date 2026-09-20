@@ -1,11 +1,11 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_tE5jNKah.mjs';
 import 'piccolore';
-import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_s9hWfDyt.mjs';
+import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_CQL5CkHf.mjs';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { c as cn } from '../chunks/BaseLayout_Dif1Ba7Q.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_Cl0kQkyE.mjs';
+import { c as cn } from '../chunks/BaseLayout_k0i_bco2.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 export { renderers } from '../renderers.mjs';
 
 const skillSlotPoints = [

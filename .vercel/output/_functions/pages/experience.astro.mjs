@@ -1,8 +1,8 @@
 import { e as createComponent, m as maybeRenderHead, r as renderTemplate, h as createAstro, k as renderComponent } from '../chunks/astro/server_tE5jNKah.mjs';
 import 'piccolore';
 import 'clsx';
-import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_s9hWfDyt.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_Cl0kQkyE.mjs';
+import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_CQL5CkHf.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Astro = createAstro();

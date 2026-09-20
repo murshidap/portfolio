@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, ImagePlus, LoaderCircle, LogOut, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, ExternalLink, Eye, ImagePlus, LoaderCircle, LogOut, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,15 @@ import { defaultContent } from "@/data/defaultContent";
 import { cn } from "@/lib/utils";
 import type {
   AchievementItem,
-  EducationItem,
+  ActivityItem,
   ExperienceItem,
   PortfolioContent,
   ProjectItem
 } from "@/types/content";
 
-type TabKey = "homepage" | "skills" | "projects" | "experience" | "certificates" | "achievements";
-type CollectionKey = "skills" | "projects" | "experience" | "certificates" | "achievements" | "education";
+type TabKey = "homepage" | "skills" | "projects" | "experience" | "certificates" | "about";
+type AboutSection = "intro" | "education" | "achievements" | "activities";
+type CollectionKey = "skills" | "projects" | "experience" | "certificates" | "achievements" | "activities" | "education";
 
 interface AdminAppProps {
   authenticated: boolean;
@@ -26,17 +27,59 @@ interface AdminAppProps {
 
 const tabs: Array<{ key: TabKey; label: string }> = [
   { key: "homepage", label: "Homepage" },
+  { key: "about", label: "About Me" },
   { key: "skills", label: "Skills" },
   { key: "projects", label: "Projects" },
   { key: "experience", label: "Experience" },
-  { key: "certificates", label: "Certificates" },
-  { key: "achievements", label: "Achievements" }
+  { key: "certificates", label: "Certificates" }
 ];
 
 const createId = () => crypto.randomUUID();
+const activityCardCount = 8;
+
+function normalizePersistedId(value: unknown) {
+  if (typeof value === "string" && value.trim()) {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return createId();
+}
 
 function appendUniqueUrl(urls: string[] | undefined, url: string) {
   return Array.from(new Set([...(urls ?? []), url].map((item) => item.trim()).filter(Boolean)));
+}
+
+function normalizeActivitySlots(items: ActivityItem[] | undefined) {
+  const sourceItems = items ?? defaultContent.activities;
+
+  return sourceItems.map((item, index) => ({
+    id: normalizePersistedId(item?.id),
+    title: item?.title || `Activity ${index + 1}`,
+    image_url: item?.image_url || ""
+  }));
+}
+
+function isSquareImage(file: File) {
+  return new Promise<boolean>((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image.naturalWidth > 0 && image.naturalWidth === image.naturalHeight);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(false);
+    };
+
+    image.src = objectUrl;
+  });
 }
 
 const primaryActionClass =
@@ -51,9 +94,10 @@ const panelClass = "!rounded-md !border-zinc-200 !bg-white !shadow-none !backdro
 const homepageValueInputClass =
   "!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !shadow-none focus:!border-0 focus:!ring-0";
 const projectAdditionalImageMaxCount = 4;
+const projectDescriptionMaxLength = 240;
 const experienceDescriptionMaxLength = 220;
 const achievementTitleMaxLength = 28;
-const achievementMaxCount = 4;
+const activityTitleMaxLength = 60;
 const fixedOwnerName = "MURSHIDA P.";
 
 async function parseResponse(response: Response) {
@@ -66,6 +110,7 @@ async function parseResponse(response: Response) {
 
 export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
   const [tab, setTab] = useState<TabKey>("homepage");
+  const [aboutSection, setAboutSection] = useState<AboutSection>("intro");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(authenticated);
@@ -76,10 +121,12 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
     return {
       ...startingContent,
-      achievements: startingContent.achievements.slice(0, achievementMaxCount)
+      achievements: startingContent.achievements,
+      activities: normalizeActivitySlots(startingContent.activities)
     };
   });
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
 
   const saveIntro = async () => {
     setSaving(true);
@@ -106,11 +153,23 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     setMessage("");
 
     try {
+      const sanitizedRows = rows.map((row) => {
+        if (!row || typeof row !== "object") {
+          return row;
+        }
+
+        const withId = row as Record<string, unknown>;
+        return {
+          ...withId,
+          id: normalizePersistedId(withId.id)
+        };
+      });
+
       await parseResponse(
         await fetch("/api/admin/collection", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ table, rows })
+          body: JSON.stringify({ table, rows: sanitizedRows })
         })
       );
       setMessage(`${table} updated.`);
@@ -140,7 +199,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               table: "achievements",
-              rows: content.achievements.slice(0, achievementMaxCount).map((entry) => ({
+              rows: content.achievements.map((entry) => ({
                 ...entry,
                 title: entry.title.slice(0, achievementTitleMaxLength)
               }))
@@ -153,9 +212,23 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ table: "education", rows: content.education })
           })
+        ),
+        parseResponse(
+          await fetch("/api/admin/collection", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              table: "activities",
+              rows: content.activities.map((entry, index) => ({
+                ...entry,
+                id: entry.id || `activity-${index + 1}`,
+                title: entry.title.slice(0, activityTitleMaxLength)
+              }))
+            })
+          })
         )
       ]);
-      setMessage("Achievements updated.");
+      setMessage("About content updated.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Saving failed.");
     } finally {
@@ -207,6 +280,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     const newProject: ProjectItem = {
       id: createId(),
       title: "",
+      subtitle: "",
       description: "",
       stack: [],
       project_url: "",
@@ -216,7 +290,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
     setContent((previous) => ({
       ...previous,
-      projects: [newProject, ...previous.projects]
+      projects: [...previous.projects, newProject]
     }));
     setEditingProjectId(newProject.id);
   };
@@ -227,11 +301,21 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
       skills: [{ id: createId(), title: "", icon_url: "" }, ...previous.skills]
     }));
 
-  const addExperience = () =>
+  const addExperience = () => {
+    const newExperience: ExperienceItem = {
+      id: createId(),
+      company: "",
+      role: "",
+      duration: "",
+      description: ""
+    };
+
     setContent((previous) => ({
       ...previous,
-      experience: [{ id: createId(), company: "", role: "", duration: "", description: "" }, ...previous.experience]
+      experience: [newExperience, ...previous.experience]
     }));
+    setEditingExperienceId(newExperience.id);
+  };
 
   const addCertificate = () =>
     setContent((previous) => ({
@@ -240,17 +324,10 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     }));
 
   const addAchievement = () =>
-    setContent((previous) => {
-      if (previous.achievements.length >= achievementMaxCount) {
-        setMessage(`Only ${achievementMaxCount} achievements can be uploaded.`);
-        return previous;
-      }
-
-      return {
-        ...previous,
-        achievements: [{ id: createId(), title: "", image_url: "" }, ...previous.achievements]
-      };
-    });
+    setContent((previous) => ({
+      ...previous,
+      achievements: [{ id: createId(), title: "", image_url: "" }, ...previous.achievements]
+    }));
 
   const addEducation = () =>
     setContent((previous) => ({
@@ -304,13 +381,17 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     return renderLogin();
   }
 
-  const tabCounts: Record<TabKey, string | number> = {
+  const tabCounts: Record<Exclude<TabKey, "about">, string | number> = {
     homepage: 1,
     skills: content.skills.length,
     projects: content.projects.length,
     experience: content.experience.length,
-    certificates: content.certificates.length,
-    achievements: content.achievements.length + content.education.length
+    certificates: content.certificates.length
+  };
+  const aboutSectionCounts: Partial<Record<AboutSection, number>> = {
+    education: content.education.length,
+    achievements: content.achievements.length,
+    activities: content.activities.length
   };
   const activeTab = tabs.find((item) => item.key === tab) ?? tabs[0];
   const renderHeaderActions = () => {
@@ -323,26 +404,56 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
       );
     }
 
-    if (tab === "achievements") {
+    if (tab === "about") {
+      if (aboutSection === "intro") {
+        return (
+          <Button className={primaryActionClass} onClick={saveIntro} type="button">
+            <Save className="h-4 w-4" />
+            Save Intro
+          </Button>
+        );
+      }
+
+      if (aboutSection === "education") {
+        return (
+          <div className="flex shrink-0 flex-wrap justify-end gap-3">
+            <Button className={secondaryActionClass} onClick={addEducation} type="button" variant="secondary">
+              <Plus className="h-4 w-4" />
+              Add Education
+            </Button>
+            <Button className={primaryActionClass} onClick={() => saveList("education", content.education)} type="button">
+              <Save className="h-4 w-4" />
+              Save Education
+            </Button>
+          </div>
+        );
+      }
+
+      if (aboutSection === "achievements") {
+        return (
+          <div className="flex shrink-0 flex-wrap justify-end gap-3">
+            <Button
+              className={secondaryActionClass}
+              onClick={addAchievement}
+              type="button"
+              variant="secondary"
+            >
+              <Plus className="h-4 w-4" />
+              Add Achievement
+            </Button>
+            <Button className={primaryActionClass} onClick={() => saveList("achievements", content.achievements)} type="button">
+              <Save className="h-4 w-4" />
+              Save Achievements
+            </Button>
+          </div>
+        );
+      }
+
       return (
         <div className="flex shrink-0 flex-wrap justify-end gap-3">
-          <Button
-            className={secondaryActionClass}
-            disabled={content.achievements.length >= achievementMaxCount}
-            onClick={addAchievement}
-            type="button"
-            variant="secondary"
-          >
-            <Plus className="h-4 w-4" />
-            Add Achievement
-          </Button>
-          <Button className={secondaryActionClass} onClick={addEducation} type="button" variant="secondary">
-            <Plus className="h-4 w-4" />
-            Add Education
-          </Button>
           <Button className={primaryActionClass} onClick={saveAchievementsPanel} type="button">
             <Save className="h-4 w-4" />
-            Save Changes
+            Save Activities
           </Button>
         </div>
       );
@@ -354,6 +465,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
       experience: { addLabel: "Add Experience", onAdd: addExperience, onSave: saveExperience },
       certificates: { addLabel: "Add Certificate", onAdd: addCertificate, onSave: () => saveList("certificates", content.certificates) },
       achievements: { addLabel: "Add Achievement", onAdd: addAchievement, onSave: saveAchievementsPanel },
+      activities: { addLabel: "Add Activity", onAdd: () => undefined, onSave: saveAchievementsPanel },
       education: { addLabel: "Add Education", onAdd: addEducation, onSave: () => saveList("education", content.education) }
     };
     const activeActions = actions[tab as CollectionKey];
@@ -385,6 +497,43 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
           <div className="mt-2 space-y-1">
             {tabs.map((item) => {
               const active = tab === item.key;
+
+              if (item.key === "about") {
+                return (
+                  <div key={item.key}>
+                    <button
+                      className={cn(
+                        "flex h-10 w-full items-center justify-between rounded-md px-3 text-left text-sm font-medium transition",
+                        active ? "bg-black text-white" : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950"
+                      )}
+                      onClick={() => setTab("about")}
+                      type="button"
+                    >
+                      <span>{item.label}</span>
+                    </button>
+                    {active ? (
+                      <div className="ml-3 mt-1 space-y-1 border-l border-zinc-200 pl-3">
+                        {(["intro", "education", "achievements", "activities"] as const).map((section) => (
+                          <button
+                            className={cn(
+                              "flex h-9 w-full items-center justify-between rounded-md px-3 text-left text-sm transition",
+                              aboutSection === section ? "bg-zinc-100 font-medium text-zinc-950" : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950"
+                            )}
+                            key={section}
+                            onClick={() => setAboutSection(section)}
+                            type="button"
+                          >
+                            <span>{section[0].toUpperCase() + section.slice(1)}</span>
+                            {aboutSectionCounts[section] !== undefined ? (
+                              <span className="text-xs text-zinc-400">{aboutSectionCounts[section]}</span>
+                            ) : null}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              }
 
               return (
                 <button
@@ -424,9 +573,23 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
         </header>
 
         <div className="max-w-[1280px] px-8 py-7">
-          <Card className={cn(panelClass, "p-5 md:p-6")}>
+          <Card className="!border-0 !bg-transparent p-5 !shadow-none md:p-6">
         {tab === "homepage" && (
           <div className="overflow-hidden rounded-md border border-zinc-200">
+            <AdminFieldRow label="Profile Picture">
+              <AssetUpload
+                accept=".jpeg,.jpg,.png,.webp,.avif,.gif"
+                assetFolder="intro"
+                inputClassName={homepageValueInputClass}
+                onUploaded={(url) =>
+                  setContent((previous) => ({
+                    ...previous,
+                    intro: { ...previous.intro, profile_image_url: url }
+                  }))
+                }
+                value={content.intro.profile_image_url}
+              />
+            </AdminFieldRow>
             <AdminFieldRow label="Role">
               <Input
                 className={homepageValueInputClass}
@@ -482,7 +645,6 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
               <AssetUpload
                 accept="application/pdf"
                 assetFolder="resume"
-                displayValue={content.intro.resume_url ? "Uploaded" : ""}
                 inputClassName={homepageValueInputClass}
                 onUploaded={(url) =>
                   setContent((previous) => ({
@@ -498,31 +660,19 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
         {tab === "skills" && (
           <div className="overflow-hidden rounded-md border border-zinc-200">
-            <div className="grid grid-cols-[minmax(0,1fr)_240px_72px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-              <div className="border-r border-zinc-200 px-4 py-3">Skill</div>
-              <div className="border-r border-zinc-200 px-4 py-3 text-center">Icon Image</div>
-              <div className="px-4 py-3 text-center">Delete</div>
+            <div className="grid grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              <div className="px-5 py-3">SI NO.</div>
+              <div className="px-5 py-3 text-center">Icon</div>
+              <div className="px-5 py-3">Skill</div>
+              <div className="px-5 py-3 text-center">Delete</div>
             </div>
             {content.skills.map((item, index) => (
               <div
                 key={item.id}
-                className="grid min-h-14 grid-cols-[minmax(0,1fr)_240px_72px] border-b border-zinc-200 last:border-b-0"
+                className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
               >
-                <div className="flex items-center border-r border-zinc-200 px-4 py-3">
-                  <Input
-                    className={homepageValueInputClass}
-                    value={item.title}
-                    onChange={(event) =>
-                      setContent((previous) => ({
-                        ...previous,
-                        skills: previous.skills.map((entry, entryIndex) =>
-                          entryIndex === index ? { ...item, title: event.target.value } : entry
-                        )
-                      }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-center border-r border-zinc-200 px-4 py-3">
+                <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
+                <div className="flex items-center justify-center px-5 py-3">
                   <IconUploadButton
                     accept=".jpeg,.jpg,.png,.webp,.avif,.gif"
                     assetFolder="skills"
@@ -537,7 +687,21 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     }
                   />
                 </div>
-                <div className="flex items-center justify-center px-4 py-3">
+                <div className="flex items-center px-5 py-3">
+                  <Input
+                    className={homepageValueInputClass}
+                    value={item.title}
+                    onChange={(event) =>
+                      setContent((previous) => ({
+                        ...previous,
+                        skills: previous.skills.map((entry, entryIndex) =>
+                          entryIndex === index ? { ...item, title: event.target.value } : entry
+                        )
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-center px-5 py-3">
                   <button
                     aria-label={`Delete ${item.title || "skill"}`}
                     className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
@@ -604,58 +768,80 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
         )}
 
         {tab === "experience" && (
-          <CrudList>
-            {content.experience.map((item, index) => (
-              <SimpleEditor
-                key={item.id}
-                fields={[
-                  ["Role", item.role, (value) => ({ ...item, role: value })],
-                  ["Company", item.company, (value) => ({ ...item, company: value })],
-                  ["Duration", item.duration, (value) => ({ ...item, duration: value })]
-                ]}
-                onBodyChange={(value) =>
-                  setContent((previous) => ({
-                    ...previous,
-                    experience: previous.experience.map((entry, entryIndex) =>
-                      entryIndex === index ? { ...item, description: value } : entry
-                    )
-                  }))
-                }
-                onDelete={() => {
+          (() => {
+            const editingExperience = content.experience.find((item) => item.id === editingExperienceId);
+
+            if (editingExperience) {
+              return (
+                <ExperienceEditor
+                  item={editingExperience}
+                  onBack={() => setEditingExperienceId(null)}
+                  onChange={(next) =>
+                    setContent((previous) => ({
+                      ...previous,
+                      experience: previous.experience.map((entry) => (entry.id === next.id ? next : entry))
+                    }))
+                  }
+                  onDelete={() => {
+                    setEditingExperienceId(null);
+                    setContent((previous) => ({
+                      ...previous,
+                      experience: previous.experience.filter((entry) => entry.id !== editingExperience.id)
+                    }));
+                    void deleteRow("experience", editingExperience.id);
+                  }}
+                />
+              );
+            }
+
+            return (
+              <ExperienceTable
+                items={content.experience}
+                onDelete={(item) => {
                   setContent((previous) => ({
                     ...previous,
                     experience: previous.experience.filter((entry) => entry.id !== item.id)
                   }));
                   void deleteRow("experience", item.id);
                 }}
-                onFieldUpdate={(next) =>
-                  setContent((previous) => ({
-                    ...previous,
-                    experience: previous.experience.map((entry, entryIndex) => (entryIndex === index ? next : entry))
-                  }))
-                }
-                bodyMaxLength={experienceDescriptionMaxLength}
-                textValue={item.description}
+                onEdit={(item) => setEditingExperienceId(item.id)}
               />
-            ))}
-          </CrudList>
+            );
+          })()
         )}
 
         {tab === "certificates" && (
           <div className="overflow-hidden rounded-md border border-zinc-200">
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_240px_72px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-              <div className="border-r border-zinc-200 px-4 py-3">Title</div>
-              <div className="border-r border-zinc-200 px-4 py-3">Issuer</div>
-              <div className="border-r border-zinc-200 px-4 py-3">Year</div>
-              <div className="border-r border-zinc-200 px-4 py-3 text-center">Image</div>
+            <div className="grid grid-cols-[88px_240px_minmax(0,1fr)_minmax(0,1fr)_120px_72px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              <div className="whitespace-nowrap px-4 py-3 text-center">SI No.</div>
+              <div className="px-4 py-3 text-center">Image</div>
+              <div className="px-4 py-3">Title</div>
+              <div className="px-4 py-3">Issuer</div>
+              <div className="px-4 py-3">Year</div>
               <div className="px-4 py-3 text-center">Delete</div>
             </div>
             {content.certificates.map((item, index) => (
               <div
                 key={item.id}
-                className="grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_240px_72px] border-b border-zinc-200 last:border-b-0"
+                className="grid min-h-14 grid-cols-[88px_240px_minmax(0,1fr)_minmax(0,1fr)_120px_72px] border-b border-zinc-200 last:border-b-0"
               >
-                <div className="flex items-center border-r border-zinc-200 px-4 py-3">
+                <div className="flex items-center justify-center px-4 py-3 text-sm text-zinc-500">{index + 1}</div>
+                <div className="flex items-center justify-center px-4 py-3">
+                  <IconUploadButton
+                    accept=".jpeg,.jpg,.png,.webp,.avif,.gif"
+                    assetFolder="certificates"
+                    currentUrl={item.asset_url}
+                    onUploaded={(url) =>
+                      setContent((previous) => ({
+                        ...previous,
+                        certificates: previous.certificates.map((entry, entryIndex) =>
+                          entryIndex === index ? { ...item, asset_url: url } : entry
+                        )
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center px-4 py-3">
                   <Input
                     className={homepageValueInputClass}
                     value={item.title}
@@ -669,7 +855,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     }
                   />
                 </div>
-                <div className="flex items-center border-r border-zinc-200 px-4 py-3">
+                <div className="flex items-center px-4 py-3">
                   <Input
                     className={homepageValueInputClass}
                     value={item.issuer}
@@ -683,7 +869,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     }
                   />
                 </div>
-                <div className="flex items-center border-r border-zinc-200 px-4 py-3">
+                <div className="flex items-center px-4 py-3">
                   <Input
                     className={homepageValueInputClass}
                     value={item.year}
@@ -692,21 +878,6 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                         ...previous,
                         certificates: previous.certificates.map((entry, entryIndex) =>
                           entryIndex === index ? { ...item, year: event.target.value } : entry
-                        )
-                      }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-center border-r border-zinc-200 px-4 py-3">
-                  <IconUploadButton
-                    accept=".jpeg,.jpg,.png,.webp,.avif,.gif"
-                    assetFolder="certificates"
-                    currentUrl={item.asset_url}
-                    onUploaded={(url) =>
-                      setContent((previous) => ({
-                        ...previous,
-                        certificates: previous.certificates.map((entry, entryIndex) =>
-                          entryIndex === index ? { ...item, asset_url: url } : entry
                         )
                       }))
                     }
@@ -733,69 +904,231 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
           </div>
         )}
 
-        {tab === "achievements" && (
+        {tab === "about" && aboutSection === "intro" && (
           <CrudList>
-            <Card className={cn(panelClass, "p-4")}>
+            <div className="space-y-2">
               <Label>Intro Text</Label>
               <Textarea
+                className="!min-h-80 resize-y"
                 value={content.intro.intro}
                 onChange={(event) =>
                   setContent((previous) => ({ ...previous, intro: { ...previous.intro, intro: event.target.value } }))
                 }
               />
-            </Card>
-            {content.education.map((item, index) => (
-              <SimpleEditor
-                key={item.id}
-                fields={[
-                  ["Degree", item.degree, (value) => ({ ...item, degree: value })],
-                  ["Institution", item.institution, (value) => ({ ...item, institution: value })],
-                  ["Duration", item.duration, (value) => ({ ...item, duration: value })]
-                ]}
-                onBodyChange={(value) =>
-                  setContent((previous) => ({
-                    ...previous,
-                    education: previous.education.map((entry, entryIndex) =>
-                      entryIndex === index ? { ...item, description: value } : entry
-                    )
-                  }))
-                }
-                onDelete={() => {
-                  setContent((previous) => ({
-                    ...previous,
-                    education: previous.education.filter((entry) => entry.id !== item.id)
-                  }));
-                  void deleteRow("education", item.id);
-                }}
-                onFieldUpdate={(next) =>
-                  setContent((previous) => ({
-                    ...previous,
-                    education: previous.education.map((entry, entryIndex) => (entryIndex === index ? next : entry))
-                  }))
-                }
-                textValue={item.description}
-              />
-            ))}
-            {content.achievements.map((item, index) => (
-              <AchievementEditor
-                key={item.id}
-                item={item}
-                onChange={(next) =>
-                  setContent((previous) => ({
-                    ...previous,
-                    achievements: previous.achievements.map((entry, entryIndex) => (entryIndex === index ? next : entry))
-                  }))
-                }
-                onDelete={() => {
-                  setContent((previous) => ({
-                    ...previous,
-                    achievements: previous.achievements.filter((entry) => entry.id !== item.id)
-                  }));
-                  void deleteRow("achievements", item.id);
-                }}
-              />
-            ))}
+            </div>
           </CrudList>
+        )}
+
+        {tab === "about" && aboutSection === "education" && (
+          <div className="overflow-x-auto rounded-md border border-zinc-200">
+            <div className="min-w-[720px] overflow-hidden">
+              <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                <div className="px-5 py-3">Degree</div>
+                <div className="px-5 py-3">Institution</div>
+                <div className="px-5 py-3">Duration</div>
+                <div className="px-5 py-3 text-center">Delete</div>
+              </div>
+              {content.education.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="grid min-h-14 grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
+                >
+                  <div className="flex items-center px-5 py-3">
+                    <Input
+                      className={homepageValueInputClass}
+                      value={item.degree}
+                      onChange={(event) =>
+                        setContent((previous) => ({
+                          ...previous,
+                          education: previous.education.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, degree: event.target.value } : entry
+                          )
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center px-5 py-3">
+                    <Input
+                      className={homepageValueInputClass}
+                      value={item.institution}
+                      onChange={(event) =>
+                        setContent((previous) => ({
+                          ...previous,
+                          education: previous.education.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, institution: event.target.value } : entry
+                          )
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center px-5 py-3">
+                    <Input
+                      className={homepageValueInputClass}
+                      value={item.duration}
+                      onChange={(event) =>
+                        setContent((previous) => ({
+                          ...previous,
+                          education: previous.education.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, duration: event.target.value } : entry
+                          )
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-center px-5 py-3">
+                    <button
+                      aria-label={`Delete ${item.degree || "education"}`}
+                      className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
+                      onClick={() => {
+                        setContent((previous) => ({
+                          ...previous,
+                          education: previous.education.filter((entry) => entry.id !== item.id)
+                        }));
+                        void deleteRow("education", item.id);
+                      }}
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "about" && aboutSection === "achievements" && (
+          <div className="overflow-x-auto rounded-md border border-zinc-200">
+            <div className="min-w-[640px] overflow-hidden">
+              <div className="grid grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                <div className="px-5 py-3">SI NO.</div>
+                <div className="px-5 py-3 text-center">Image</div>
+                <div className="px-5 py-3">Title</div>
+                <div className="px-5 py-3 text-center">Delete</div>
+              </div>
+              {content.achievements.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
+                >
+                  <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
+                  <div className="flex items-center justify-center px-5 py-3">
+                    <IconUploadButton
+                      accept=".jpeg,.jpg,.png,.webp,.svg"
+                      assetFolder="achievements"
+                      currentUrl={item.image_url}
+                      onUploaded={(url) =>
+                        setContent((previous) => ({
+                          ...previous,
+                          achievements: previous.achievements.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, image_url: url } : entry
+                          )
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center px-5 py-3">
+                    <Input
+                      className={homepageValueInputClass}
+                      maxLength={achievementTitleMaxLength}
+                      value={item.title}
+                      onChange={(event) =>
+                        setContent((previous) => ({
+                          ...previous,
+                          achievements: previous.achievements.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, title: event.target.value.slice(0, achievementTitleMaxLength) } : entry
+                          )
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-center px-5 py-3">
+                    <button
+                      aria-label={`Delete ${item.title || "achievement"}`}
+                      className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
+                      onClick={() => {
+                        setContent((previous) => ({
+                          ...previous,
+                          achievements: previous.achievements.filter((entry) => entry.id !== item.id)
+                        }));
+                        void deleteRow("achievements", item.id);
+                      }}
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "about" && aboutSection === "activities" && (
+          <div className="overflow-x-auto rounded-md border border-zinc-200">
+            <div className="min-w-[640px] overflow-hidden">
+              <div className="grid grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                <div className="px-5 py-3">SI NO.</div>
+                <div className="px-5 py-3 text-center">Image</div>
+                <div className="px-5 py-3">Title</div>
+                <div className="px-5 py-3 text-center">Delete</div>
+              </div>
+              {content.activities.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
+                >
+                  <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
+                  <div className="flex items-center px-5 py-3">
+                    <IconUploadButton
+                      accept=".jpeg,.jpg,.png,.webp,.gif"
+                      assetFolder="activities"
+                      currentUrl={item.image_url}
+                      onUploaded={(url) =>
+                        setContent((previous) => ({
+                          ...previous,
+                          activities: previous.activities.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, image_url: url } : entry
+                          )
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center px-5 py-3">
+                    <Input
+                      className={homepageValueInputClass}
+                      maxLength={activityTitleMaxLength}
+                      value={item.title}
+                      onChange={(event) =>
+                        setContent((previous) => ({
+                          ...previous,
+                          activities: previous.activities.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, title: event.target.value.slice(0, activityTitleMaxLength) } : entry
+                          )
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-center px-5 py-3">
+                    <button
+                      aria-label={`Delete ${item.title || "activity"}`}
+                      className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
+                      onClick={() => {
+                        setContent((previous) => ({
+                          ...previous,
+                          activities: previous.activities.filter((entry) => entry.id !== item.id)
+                        }));
+                        void deleteRow("activities", item.id);
+                      }}
+                      type="button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
           </Card>
         </div>
@@ -830,23 +1163,31 @@ function ProjectsTable({
 }) {
   return (
     <div className="overflow-hidden rounded-md border border-zinc-200">
-      <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_96px_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-        <div className="border-r border-zinc-200 px-4 py-3">Project</div>
-        <div className="border-r border-zinc-200 px-4 py-3">Website</div>
-        <div className="border-r border-zinc-200 px-4 py-3 text-center">Edit</div>
-        <div className="px-4 py-3 text-center">Delete</div>
+      <div className="grid grid-cols-[88px_120px_minmax(0,1.25fr)_minmax(0,1fr)_112px_104px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+        <div className="px-5 py-3">SI NO.</div>
+        <div className="px-5 py-3 text-center">Icon</div>
+        <div className="px-5 py-3">Project</div>
+        <div className="px-5 py-3">Website</div>
+        <div className="px-5 py-3 text-center">Edit</div>
+        <div className="px-5 py-3 text-center">Delete</div>
       </div>
 
       {items.length ? (
-        items.map((item) => (
+        items.map((item, index) => (
           <div
-            className="grid min-h-14 grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_96px_88px] border-b border-zinc-200 last:border-b-0"
+            className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1.25fr)_minmax(0,1fr)_112px_104px] border-b border-zinc-200 last:border-b-0"
             key={item.id}
           >
-            <div className="flex min-w-0 items-center border-r border-zinc-200 px-4 py-3">
+            <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
+            <div className="flex items-center justify-center px-5 py-3">
+              <div aria-label={item.image_url ? `${item.title || "Project"} cover image` : "No cover image"} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md text-zinc-400" title="Edit cover image from the project editor">
+                {item.image_url ? <img alt="" className="h-8 w-8 rounded object-cover" src={item.image_url} /> : <ImagePlus className="h-5 w-5" />}
+              </div>
+            </div>
+            <div className="flex min-w-0 items-center px-5 py-3">
               <p className="truncate text-sm font-medium text-zinc-950">{item.title || "Untitled project"}</p>
             </div>
-            <div className="flex min-w-0 items-center border-r border-zinc-200 px-4 py-3">
+            <div className="flex min-w-0 items-center px-5 py-3">
               {item.project_url ? (
                 <a
                   className="inline-flex min-w-0 items-center gap-2 text-sm text-zinc-600 transition hover:text-black"
@@ -861,7 +1202,7 @@ function ProjectsTable({
                 <span className="text-sm text-zinc-400">Not added</span>
               )}
             </div>
-            <div className="flex items-center justify-center border-r border-zinc-200 px-4 py-3">
+            <div className="flex items-center justify-center px-5 py-3">
               <button
                 aria-label={`Edit ${item.title || "project"}`}
                 className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
@@ -871,7 +1212,7 @@ function ProjectsTable({
                 <Pencil className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex items-center justify-center px-4 py-3">
+            <div className="flex items-center justify-center px-5 py-3">
               <button
                 aria-label={`Delete ${item.title || "project"}`}
                 className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
@@ -957,11 +1298,12 @@ function ProjectEditor({
       <div>
         <Textarea
           className="!min-h-32 resize-none"
+          maxLength={projectDescriptionMaxLength}
           placeholder="Project description"
-          value={item.description}
-          onChange={(event) => onChange({ ...item, description: event.target.value })}
+          value={item.description.slice(0, projectDescriptionMaxLength)}
+          onChange={(event) => onChange({ ...item, description: event.target.value.slice(0, projectDescriptionMaxLength) })}
         />
-        <p className="mt-2 text-xs text-zinc-500">char: {item.description.length}</p>
+        <p className="mt-2 text-xs text-zinc-500">{projectDescriptionMaxLength - item.description.slice(0, projectDescriptionMaxLength).length} characters remaining</p>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[180px_minmax(0,1fr)]">
@@ -1147,103 +1489,127 @@ function ProjectImageUploadButton({
   );
 }
 
-function SimpleEditor<T extends ExperienceItem | EducationItem>({
-  fields,
-  onFieldUpdate,
-  onBodyChange,
-  bodyMaxLength,
-  textValue,
+function ExperienceTable({
+  items,
+  onEdit,
   onDelete
 }: {
-  fields: Array<[string, string, (value: string) => T]>;
-  onFieldUpdate: (next: T) => void;
-  onBodyChange: (value: string) => void;
-  bodyMaxLength?: number;
-  textValue: string;
-  onDelete: () => void;
+  items: ExperienceItem[];
+  onEdit: (item: ExperienceItem) => void;
+  onDelete: (item: ExperienceItem) => void;
 }) {
-  const visibleTextValue = bodyMaxLength ? textValue.slice(0, bodyMaxLength) : textValue;
-  const descriptionLength = visibleTextValue.length;
-
   return (
-    <Card className={cn(panelClass, "p-4")}>
-      <div className="grid gap-4 md:grid-cols-3">
-        {fields.map(([label, value, factory]) => (
-          <div key={label}>
-            <Label>{label}</Label>
-            <Input value={value} onChange={(event) => onFieldUpdate(factory(event.target.value))} />
-          </div>
-        ))}
-        <div className="md:col-span-3">
-          <div className="mb-1 flex items-center justify-between gap-3">
-            <Label>Description</Label>
-            {bodyMaxLength ? (
-              <span className="text-xs text-zinc-500">
-                {descriptionLength}/{bodyMaxLength}
-              </span>
-            ) : null}
-          </div>
-          <Textarea
-            maxLength={bodyMaxLength}
-            value={visibleTextValue}
-            onChange={(event) => onBodyChange(bodyMaxLength ? event.target.value.slice(0, bodyMaxLength) : event.target.value)}
-          />
-        </div>
-      </div>
-      <div className="mt-4">
-        <Button className={destructiveActionClass} onClick={onDelete} type="button" variant="secondary">
-          <Trash2 className="h-4 w-4" />
-          Delete
-        </Button>
-      </div>
-    </Card>
+    <div className="overflow-x-auto rounded-md border border-zinc-200">
+      <table className="w-full min-w-[680px] border-collapse text-left">
+        <thead className="bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          <tr>
+            <th className="border-b border-zinc-200 px-4 py-3">Role</th>
+            <th className="border-b border-zinc-200 px-4 py-3">Company</th>
+            <th className="border-b border-zinc-200 px-4 py-3">Duration</th>
+            <th className="w-24 border-b border-zinc-200 px-4 py-3 text-center">Edit</th>
+            <th className="w-24 border-b border-zinc-200 px-4 py-3 text-center">Delete</th>
+          </tr>
+        </thead>
+        <tbody className="text-sm text-zinc-700">
+          {items.length ? (
+            items.map((item) => (
+              <tr className="border-b border-zinc-200 last:border-b-0" key={item.id}>
+                <td className="max-w-[240px] px-4 py-4 font-medium text-zinc-950">{item.role || "Untitled role"}</td>
+                <td className="max-w-[240px] px-4 py-4">{item.company || "No company"}</td>
+                <td className="max-w-[200px] px-4 py-4">{item.duration || "No duration"}</td>
+                <td className="px-4 py-4 text-center">
+                  <Button
+                    aria-label={`Edit ${item.role || "experience"}`}
+                    className="!h-8 !w-8 !rounded-md !p-0 !text-zinc-700"
+                    onClick={() => onEdit(item)}
+                    title="Edit experience"
+                    type="button"
+                    variant="secondary"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </td>
+                <td className="px-4 py-4 text-center">
+                  <Button
+                    aria-label={`Delete ${item.role || "experience"}`}
+                    className="!h-8 !w-8 !rounded-md !border-red-200 !p-0 !text-red-600 hover:!border-red-600 hover:!bg-red-50"
+                    onClick={() => onDelete(item)}
+                    title="Delete experience"
+                    type="button"
+                    variant="secondary"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td className="px-4 py-8 text-center text-sm text-zinc-500" colSpan={5}>
+                No experience entries yet.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-function AchievementEditor({
+function ExperienceEditor({
   item,
   onChange,
+  onBack,
   onDelete
 }: {
-  item: AchievementItem;
-  onChange: (next: AchievementItem) => void;
+  item: ExperienceItem;
+  onChange: (next: ExperienceItem) => void;
+  onBack: () => void;
   onDelete: () => void;
 }) {
-  const visibleTitle = item.title.slice(0, achievementTitleMaxLength);
+  const visibleDescription = item.description.slice(0, experienceDescriptionMaxLength);
 
   return (
-    <Card className={cn(panelClass, "p-4")}>
-      <div className="grid gap-4 md:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
-        <div>
-          <div className="mb-1 flex items-center justify-between gap-3">
-            <Label>Title</Label>
-            <span className="text-xs text-zinc-500">
-              {visibleTitle.length}/{achievementTitleMaxLength}
-            </span>
-          </div>
-          <Input
-            maxLength={achievementTitleMaxLength}
-            value={visibleTitle}
-            onChange={(event) => onChange({ ...item, title: event.target.value.slice(0, achievementTitleMaxLength) })}
-          />
-        </div>
-        <div>
-          <Label>Achievement Photo</Label>
-          <AssetUpload
-            accept=".jpeg,.jpg,.png,.webp,.svg"
-            assetFolder="achievements"
-            onUploaded={(url) => onChange({ ...item, image_url: url })}
-            value={item.image_url}
-          />
-        </div>
-      </div>
-      <div className="mt-4">
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <Button className={secondaryActionClass} onClick={onBack} type="button" variant="secondary">
+          <ArrowLeft className="h-4 w-4" />
+          Experience
+        </Button>
         <Button className={destructiveActionClass} onClick={onDelete} type="button" variant="secondary">
           <Trash2 className="h-4 w-4" />
-          Delete
+          Delete Experience
         </Button>
       </div>
-    </Card>
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <Label htmlFor="experience-role">Role</Label>
+            <Input id="experience-role" value={item.role} onChange={(event) => onChange({ ...item, role: event.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="experience-company">Company</Label>
+            <Input id="experience-company" value={item.company} onChange={(event) => onChange({ ...item, company: event.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="experience-duration">Duration</Label>
+            <Input id="experience-duration" value={item.duration} onChange={(event) => onChange({ ...item, duration: event.target.value })} />
+          </div>
+        </div>
+        <div>
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <Label htmlFor="experience-description">Description</Label>
+            <span className="text-xs text-zinc-500">{visibleDescription.length}/{experienceDescriptionMaxLength}</span>
+          </div>
+          <Textarea
+            id="experience-description"
+            maxLength={experienceDescriptionMaxLength}
+            value={visibleDescription}
+            onChange={(event) => onChange({ ...item, description: event.target.value.slice(0, experienceDescriptionMaxLength) })}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1263,18 +1629,17 @@ function IconUploadButton({
   return (
     <label
       className={cn(
-        "inline-flex h-9 min-w-32 cursor-pointer items-center justify-center gap-2 rounded-md px-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-100 hover:text-black",
+        "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-black",
         currentUrl ? "text-zinc-950" : ""
       )}
       title={currentUrl ? "Replace icon image" : "Upload icon image"}
     >
       {uploading ? (
         <LoaderCircle className="h-4 w-4 animate-spin" />
+      ) : currentUrl ? (
+        <img alt="" className="h-8 w-8 rounded object-cover" src={currentUrl} />
       ) : (
-        <>
-          {currentUrl ? <span>Uploaded</span> : null}
-          <Upload className="h-4 w-4" />
-        </>
+        <ImagePlus className="h-5 w-5" />
       )}
       <input
         accept={accept}
@@ -1313,51 +1678,117 @@ function AssetUpload({
   assetFolder,
   accept,
   displayValue,
-  inputClassName
+  helperText,
+  inputClassName,
+  requireSquareImage = false
 }: {
   value: string;
   onUploaded: (url: string) => void;
   assetFolder: string;
   accept: string;
   displayValue?: string;
+  helperText?: string;
   inputClassName?: string;
+  requireSquareImage?: boolean;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadComplete, setUploadComplete] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const isResume = assetFolder === "resume";
 
   return (
-    <div className="flex flex-col gap-3 md:flex-row">
-      <Input className={inputClassName} readOnly value={displayValue ?? value} placeholder="Upload asset to Supabase Storage" />
-      <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-900 transition hover:border-zinc-500 hover:bg-zinc-50">
-        {uploading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-        Upload File
-        <input
-          accept={accept}
-          className="hidden"
-          onChange={async (event) => {
-            const file = event.target.files?.[0];
-            if (!file) return;
+    <div>
+      <div className="flex flex-col gap-3 md:flex-row">
+        {isResume && value ? (
+          <button
+            aria-label="Preview resume"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-900 transition hover:border-zinc-500 hover:bg-zinc-50"
+            onClick={() => setPreviewOpen(true)}
+            title="Preview resume"
+            type="button"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        ) : (
+          <Input className={inputClassName} readOnly value={displayValue ?? value} placeholder="Upload asset to Supabase Storage" />
+        )}
+        <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-900 transition hover:border-zinc-500 hover:bg-zinc-50">
+          {uploading ? (
+            <LoaderCircle className="h-4 w-4 animate-spin" />
+          ) : uploadComplete ? (
+            <Check className="h-4 w-4 text-emerald-600" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
+          Upload File
+          <input
+            accept={accept}
+            className="hidden"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
 
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("folder", assetFolder);
-            formData.append("currentUrl", value);
+              setUploadError("");
+              setUploadComplete(false);
 
-            setUploading(true);
-            try {
-              const payload = await parseResponse(
-                await fetch("/api/admin/upload", {
-                  method: "POST",
-                  body: formData
-                })
-              );
-              onUploaded(payload.url);
-            } finally {
-              setUploading(false);
-            }
-          }}
-          type="file"
-        />
-      </label>
+              if (requireSquareImage) {
+                const square = await isSquareImage(file);
+                if (!square) {
+                  setUploadError("Please upload a square 1:1 image.");
+                  event.target.value = "";
+                  return;
+                }
+              }
+
+              const formData = new FormData();
+              formData.append("file", file);
+              formData.append("folder", assetFolder);
+              formData.append("currentUrl", value);
+
+              setUploading(true);
+              try {
+                const payload = await parseResponse(
+                  await fetch("/api/admin/upload", {
+                    method: "POST",
+                    body: formData
+                  })
+                );
+                onUploaded(payload.url);
+                setUploadComplete(true);
+              } catch (error) {
+                setUploadError(error instanceof Error ? error.message : "Upload failed.");
+              } finally {
+                setUploading(false);
+                event.target.value = "";
+              }
+            }}
+            type="file"
+          />
+        </label>
+      </div>
+      {isResume && previewOpen ? (
+        <div aria-labelledby="resume-preview-title" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog">
+          <div className="flex h-[min(90vh,900px)] w-full max-w-4xl flex-col overflow-hidden rounded-md bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
+              <h2 className="text-sm font-semibold text-zinc-950" id="resume-preview-title">Resume preview</h2>
+              <button
+                aria-label="Close resume preview"
+                className="grid h-8 w-8 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950"
+                onClick={() => setPreviewOpen(false)}
+                title="Close preview"
+                type="button"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <iframe className="min-h-0 flex-1" src={value} title="Resume PDF preview" />
+          </div>
+        </div>
+      ) : null}
+      {helperText || uploadError ? (
+        <p className={cn("mt-2 text-xs", uploadError ? "text-red-600" : "text-zinc-500")}>{uploadError || helperText}</p>
+      ) : null}
     </div>
   );
 }

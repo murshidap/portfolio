@@ -1,5 +1,6 @@
 ---
 import AchievementsIsland from "@/components/portfolio/AchievementsIsland";
+import AboutGalleryWheel from "@/components/portfolio/AboutGalleryWheel";
 import type { PortfolioContent } from "@/types/content";
 
 interface Props {
@@ -31,6 +32,8 @@ const { content } = Astro.props;
           }
         </ul>
       </div>
+
+      <AboutGalleryWheel client:load items={content.activities} />
     </div>
 
     <div class="pt-2 lg:pl-12 xl:pl-20">
