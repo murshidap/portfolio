@@ -1,11 +1,11 @@
-import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_tE5jNKah.mjs';
+import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_CcLXk7l4.mjs';
 import 'piccolore';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { useState } from 'react';
-import { C as ContactModal, P as PORTFOLIO_THEMES, D as DEFAULT_THEME_INDEX, $ as $$PortfolioShell } from '../chunks/PortfolioShell_CQL5CkHf.mjs';
-import { B as Button } from '../chunks/BaseLayout_k0i_bco2.mjs';
+import { C as ContactModal, P as PORTFOLIO_THEMES, D as DEFAULT_THEME_INDEX, $ as $$PortfolioShell } from '../chunks/PortfolioShell_5_9lhmgV.mjs';
+import { B as Button } from '../chunks/BaseLayout_BDu3dDMQ.mjs';
 import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 export { renderers } from '../renderers.mjs';
 
@@ -106,7 +106,7 @@ function HomePage({ intro }) {
             ] }, `${word}-${index}`) : /* @__PURE__ */ jsx("span", { className: index === 0 ? "block text-[1.12em]" : "block", children: word.toUpperCase() }, `${word}-${index}`)
           ) }),
           /* @__PURE__ */ jsx("div", { className: "theme-portrait-orb absolute bottom-[8%] left-[10%] right-[10%] top-[6%]" }),
-          /* @__PURE__ */ jsxs("div", { className: "relative z-30 -mt-20 w-full md:-mt-24 lg:-mt-32", children: [
+          /* @__PURE__ */ jsxs("div", { className: "relative z-30 -mt-32 w-full md:-mt-40 lg:-mt-48", children: [
             /* @__PURE__ */ jsx("div", { className: "pointer-events-none absolute bottom-[6%] left-1/2 h-[64%] w-[58%] -translate-x-1/2 rounded-full bg-black/30 blur-3xl" }),
             /* @__PURE__ */ jsx(
               motion.img,

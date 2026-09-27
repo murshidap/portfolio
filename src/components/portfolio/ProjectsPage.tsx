@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type TouchEvent, type WheelEvent } from "react";
 
 import { cn } from "@/lib/utils";
+import { getProjectFontFamily } from "@/data/projectFonts";
 import type { ProjectItem } from "@/types/content";
 
 function getProjectScreenshots(project: ProjectItem) {
@@ -39,7 +41,7 @@ function getProjectCellIndex(project: ProjectItem, availableCells: number[], use
 
 const projectGridColumns = 27;
 const projectGridRows = 15;
-const projectWheelQuietDelay = 300;
+const projectWheelQuietDelay = 180;
 
 export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) {
   const [focusedProjectIndex, setFocusedProjectIndex] = useState(0);
@@ -48,12 +50,19 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
   const sectionRef = useRef<HTMLElement | null>(null);
   const projectGridRef = useRef<HTMLDivElement | null>(null);
   const projectSpotlightRef = useRef<HTMLDivElement | null>(null);
-  const lastWheelTimeRef = useRef(0);
+  const wheelGestureActiveRef = useRef(false);
+  const wheelQuietTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const touchStartYRef = useRef<number | null>(null);
 
   useEffect(() => {
     setFocusedProjectIndex(0);
   }, [projects.length]);
+
+  useEffect(() => () => {
+    if (wheelQuietTimeoutRef.current !== null) {
+      window.clearTimeout(wheelQuietTimeoutRef.current);
+    }
+  }, []);
 
   if (projects.length === 0) {
     return null;
@@ -161,6 +170,10 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
     };
   }, [focusedProjectCell, projects.length]);
 
+  const changeFocusedProject = (direction: -1 | 1) => {
+    setFocusedProjectIndex((currentIndex) => Math.min(projects.length - 1, Math.max(0, currentIndex + direction)));
+  };
+
   const handleProjectWheel = (event: WheelEvent<HTMLElement>) => {
     if (projects.length <= 1) {
       return;
@@ -172,14 +185,19 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
       return;
     }
 
-    const now = performance.now();
-    if (now - lastWheelTimeRef.current < projectWheelQuietDelay) {
-      return;
+    if (wheelQuietTimeoutRef.current !== null) {
+      window.clearTimeout(wheelQuietTimeoutRef.current);
     }
 
-    lastWheelTimeRef.current = now;
-    const direction = event.deltaY > 0 ? 1 : -1;
-    setFocusedProjectIndex((currentIndex) => Math.min(projects.length - 1, Math.max(0, currentIndex + direction)));
+    wheelQuietTimeoutRef.current = window.setTimeout(() => {
+      wheelGestureActiveRef.current = false;
+      wheelQuietTimeoutRef.current = null;
+    }, projectWheelQuietDelay);
+
+    if (!wheelGestureActiveRef.current) {
+      wheelGestureActiveRef.current = true;
+      changeFocusedProject(event.deltaY > 0 ? 1 : -1);
+    }
   };
 
   const handleProjectSwipe = (direction: 1 | -1) => {
@@ -187,7 +205,7 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
       return;
     }
 
-    setFocusedProjectIndex((currentIndex) => Math.min(projects.length - 1, Math.max(0, currentIndex + direction)));
+    changeFocusedProject(direction);
   };
 
   const handleProjectTouchStart = (event: TouchEvent<HTMLElement>) => {
@@ -255,24 +273,53 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
         })}
       </motion.div>
 
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.9)_34%,transparent_62%,#ffffff_100%)]" />
-
-      <div className="relative z-10 mx-auto grid w-full max-w-[1180px] items-center gap-6 px-3 md:grid-cols-[minmax(9rem,0.8fr)_minmax(0,1.25fr)_minmax(14rem,0.95fr)] md:px-8">
-        <div ref={projectSpotlightRef} className="pointer-events-none mx-auto aspect-square w-[clamp(7rem,18vw,10rem)] rounded-md border border-zinc-950 ring-1 ring-zinc-950" />
+      <div className="relative z-10 mx-auto grid w-full max-w-[1180px] items-center gap-6 px-3 md:grid-cols-[minmax(7rem,0.5fr)_minmax(0,1.5fr)] md:gap-3 md:px-8">
+        <div className="flex flex-col items-center gap-3">
+          <div ref={projectSpotlightRef} className="pointer-events-none aspect-square w-[clamp(7rem,18vw,10rem)] rounded-md border border-zinc-950 ring-1 ring-zinc-950" />
+          <nav aria-label="Project navigation" className="flex items-center gap-2">
+            <button
+              aria-label="Previous project"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 bg-white/90 text-zinc-950 transition-colors hover:bg-zinc-950 hover:text-white disabled:pointer-events-none disabled:opacity-40"
+              disabled={focusedProjectIndex === 0}
+              onClick={() => changeFocusedProject(-1)}
+              type="button"
+            >
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+            </button>
+            <span aria-live="polite" className="min-w-[5.5rem] text-center text-xs font-semibold text-zinc-700">
+              Project {focusedProjectIndex + 1} of {projects.length}
+            </span>
+            <button
+              aria-label="Next project"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 bg-white/90 text-zinc-950 transition-colors hover:bg-zinc-950 hover:text-white disabled:pointer-events-none disabled:opacity-40"
+              disabled={focusedProjectIndex === projects.length - 1}
+              onClick={() => changeFocusedProject(1)}
+              type="button"
+            >
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </nav>
+        </div>
 
         <AnimatePresence mode="wait">
           <motion.div
             key={focusedProject.id}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            className="text-center md:text-left"
+            className="relative isolate text-center md:text-left"
             exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
             initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
             transition={{ duration: 0.42, ease: "easeOut" }}
           >
-            <h2 className="font-rostex-regular mt-2 text-[clamp(2.4rem,7vw,5rem)] uppercase leading-[0.88] text-zinc-950">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.8)_58%,transparent_100%)] blur-xl"
+            />
+            <h2
+              className="mt-2 text-[clamp(1.9rem,5vw,3.75rem)] leading-[0.88] text-zinc-950"
+              style={{ fontFamily: getProjectFontFamily(focusedProject.title_font) }}
+            >
               {focusedProject.title}
             </h2>
-            <p className="mt-4 max-w-[34rem] text-sm font-semibold leading-6 text-zinc-700 md:text-base">{focusedProject.description}</p>
             <div className="mt-5 flex flex-wrap justify-center gap-2 md:justify-start">
               {focusedProject.stack.map((item) => (
                 <span key={item} className="rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700">
@@ -280,26 +327,10 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
                 </span>
               ))}
             </div>
+            <p className="mt-4 max-w-[34rem] text-sm font-semibold leading-6 text-zinc-700 md:text-base">{focusedProject.description}</p>
           </motion.div>
         </AnimatePresence>
 
-        <AnimatePresence mode="wait">
-          {focusedScreenshot ? (
-            <motion.a
-              key={`${focusedProject.id}-${focusedScreenshot}`}
-              animate={{ opacity: 1, x: 0 }}
-              className="mx-auto block aspect-[4/3] w-full max-w-[22rem] overflow-hidden rounded-md border border-zinc-300 bg-white"
-              exit={{ opacity: 0, x: 24 }}
-              href={focusedProject.project_url || "#"}
-              initial={{ opacity: 0, x: -24 }}
-              rel="noreferrer"
-              target={focusedProject.project_url ? "_blank" : undefined}
-              transition={{ duration: 0.42, ease: "easeOut" }}
-            >
-              <ProjectScreenshot alt={`${focusedProject.title} screenshot`} src={focusedScreenshot} />
-            </motion.a>
-          ) : null}
-        </AnimatePresence>
       </div>
     </section>
   );

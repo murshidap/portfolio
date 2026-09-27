@@ -1,10 +1,10 @@
-import { e as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_tE5jNKah.mjs';
+import { e as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_CcLXk7l4.mjs';
 import 'piccolore';
-import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_CQL5CkHf.mjs';
+import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_5_9lhmgV.mjs';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { c as cn } from '../chunks/BaseLayout_k0i_bco2.mjs';
+import { c as cn } from '../chunks/BaseLayout_BDu3dDMQ.mjs';
 import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 export { renderers } from '../renderers.mjs';
 
@@ -238,7 +238,7 @@ function SkillsPage({ skills }) {
       {
         animate: { opacity: 1, y: 0, filter: "blur(0px)" },
         "aria-live": "polite",
-        className: "font-rostex-regular text-[clamp(2.1rem,6vw,4.2rem)] uppercase leading-[0.95] text-zinc-950",
+        className: "font-baserona-bold text-[clamp(2.1rem,6vw,4.2rem)] leading-[0.95] text-zinc-950",
         exit: { opacity: 0, y: 22, filter: "blur(8px)" },
         initial: { opacity: 0, y: -18, filter: "blur(8px)" },
         transition: { duration: 0.48, ease: "easeOut" },

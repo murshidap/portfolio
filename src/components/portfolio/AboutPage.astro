@@ -8,36 +8,55 @@ interface Props {
 }
 
 const { content } = Astro.props;
+const introParagraphs = content.intro.intro.split(/\n\s*\n/).filter(Boolean);
+const firstParagraphParts = introParagraphs[0]?.match(/^(\S+\s+\S+)([\s\S]*)$/);
 ---
 
 <section class="mx-auto min-h-0 w-full max-w-[1600px] flex-1 overflow-y-auto overflow-x-hidden py-10">
-  <div class="mx-auto grid w-full max-w-[1180px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.78fr)] lg:items-start">
-    <div class="pt-2">
-      <p class="font-open-sans-light max-w-[46rem] whitespace-pre-line text-justify text-sm font-light leading-6 text-zinc-700">
-        {content.intro.intro}
-      </p>
+  <div class="mx-auto w-full max-w-[1180px]">
+    <div class="grid gap-8 rounded-xl bg-zinc-950/90 p-6 text-white shadow-[0_18px_48px_rgba(0,0,0,0.18)] sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.52fr)] lg:items-center">
+      <div class="order-1">
+        <div class="font-open-sans-light space-y-3 text-left text-sm font-light leading-7 text-white/90 sm:text-base">
+          {
+            introParagraphs.map((paragraph, index) => (
+              <p>
+                {index === 0 && firstParagraphParts ? (
+                  <>
+                    <strong class="mr-[0.25em] text-xl font-bold text-white sm:text-2xl">{firstParagraphParts[1]}</strong>
+                    {firstParagraphParts[2]}
+                  </>
+                ) : (
+                  paragraph
+                )}
+              </p>
+            ))
+          }
+        </div>
+      </div>
 
-      <div class="mt-12">
-        <h2 class="font-display text-2xl leading-none text-zinc-950">Education</h2>
+      <div class="order-2 mt-8 border-t border-white/20 pt-6 lg:col-span-2 lg:order-3">
+        <h2 class="font-display text-2xl leading-none text-white">Education</h2>
 
-        <ul class="mt-6 list-disc space-y-5 pl-5">
+        <ul class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
           {
             content.education.map((item) => (
-              <li class="pl-2">
-                <h3 class="text-base font-semibold uppercase leading-tight text-zinc-950">{item.degree}</h3>
-                <p class="mt-1 text-sm font-medium uppercase leading-tight text-zinc-800">{item.institution}</p>
-                <p class="mt-1 text-sm leading-6 text-zinc-600">{item.duration}</p>
+              <li>
+                <h3 class="text-base font-semibold uppercase leading-tight text-white">{item.degree}</h3>
+                <p class="mt-1 text-sm font-medium uppercase leading-tight text-white/85">{item.institution}</p>
+                <p class="mt-1 text-sm leading-6 text-white/65">{item.duration}</p>
               </li>
             ))
           }
         </ul>
       </div>
 
-      <AboutGalleryWheel client:load items={content.activities} />
+      <div class="order-3 mx-auto w-full max-w-[22rem] lg:order-2">
+        <AchievementsIsland client:visible items={content.achievements} />
+      </div>
     </div>
 
-    <div class="pt-2 lg:pl-12 xl:pl-20">
-      <AchievementsIsland client:visible items={content.achievements} />
+    <div class="mt-10">
+      <AboutGalleryWheel client:load items={content.activities} />
     </div>
   </div>
 </section>

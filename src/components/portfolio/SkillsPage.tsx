@@ -298,7 +298,7 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
               key={activeSkill?.id ?? "empty-skill"}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               aria-live="polite"
-              className="font-rostex-regular text-[clamp(2.1rem,6vw,4.2rem)] uppercase leading-[0.95] text-zinc-950"
+              className="font-baserona-bold text-[clamp(2.1rem,6vw,4.2rem)] leading-[0.95] text-zinc-950"
               exit={{ opacity: 0, y: 22, filter: "blur(8px)" }}
               initial={{ opacity: 0, y: -18, filter: "blur(8px)" }}
               transition={{ duration: 0.48, ease: "easeOut" }}

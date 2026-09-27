@@ -17,14 +17,14 @@ const fallbackPanels = [
 ];
 
 const wheelSlots = [
-  { offset: 0, left: 82, top: 50, zIndex: 80 },
-  { offset: 1, left: 68, top: 79, zIndex: 70 },
-  { offset: 2, left: 42, top: 86, zIndex: 58 },
-  { offset: 3, left: 18, top: 72, zIndex: 48 },
-  { offset: 4, left: 10, top: 50, zIndex: 40 },
-  { offset: -3, left: 18, top: 28, zIndex: 48 },
-  { offset: -2, left: 42, top: 14, zIndex: 58 },
-  { offset: -1, left: 68, top: 21, zIndex: 70 }
+  { offset: 0, left: 84, top: 50, zIndex: 80 },
+  { offset: 1, left: 70, top: 75, zIndex: 70 },
+  { offset: 2, left: 50, top: 84, zIndex: 58 },
+  { offset: 3, left: 30, top: 75, zIndex: 48 },
+  { offset: 4, left: 16, top: 50, zIndex: 40 },
+  { offset: -3, left: 30, top: 25, zIndex: 48 },
+  { offset: -2, left: 50, top: 16, zIndex: 58 },
+  { offset: -1, left: 70, top: 25, zIndex: 70 }
 ];
 
 function wrapIndex(index: number, length: number) {
@@ -91,9 +91,12 @@ export default function AboutGalleryWheel({ items }: { items: ActivityItem[] }) 
   const activeItem = galleryItems[normalizedActiveIndex];
 
   return (
-    <section className="mt-14" aria-label="About gallery">
-      <div className="grid items-center gap-6 sm:grid-cols-[minmax(21rem,1fr)_minmax(13rem,0.68fr)]">
-        <div className="relative h-[20rem] w-full max-w-[24rem] overflow-visible sm:h-[23rem]">
+    <section
+      aria-label="About gallery"
+      className="mt-14 rounded-xl border border-white/80 bg-white/65 p-5 shadow-[0_18px_48px_rgba(15,23,42,0.1)] backdrop-blur-lg sm:p-8"
+    >
+      <div className="grid items-center gap-4 sm:gap-8 sm:justify-center sm:grid-cols-[minmax(0,36rem)_minmax(10rem,22rem)]">
+        <div className="relative isolate z-0 h-[34rem] w-full max-w-[36rem] overflow-visible sm:h-[38rem]">
           {galleryItems.map((item, index) => {
             const placement = getPlacement(index, normalizedActiveIndex, galleryItems.length);
             const isActive = index === normalizedActiveIndex;
@@ -111,7 +114,7 @@ export default function AboutGalleryWheel({ items }: { items: ActivityItem[] }) 
                   y: "-50%"
                 }}
                 aria-label={`Focus ${item.title || "gallery image"}`}
-                className="absolute aspect-square w-[clamp(5.9rem,13vw,7.4rem)] cursor-pointer overflow-hidden rounded-md border border-white bg-zinc-100 shadow-[0_18px_48px_rgba(15,23,42,0.18)] outline-none ring-1 ring-zinc-950/10 focus-visible:ring-2 focus-visible:ring-zinc-950"
+                className="absolute aspect-square w-[clamp(8rem,18vw,11.5rem)] cursor-pointer overflow-hidden rounded-md border border-white bg-zinc-100 shadow-[0_18px_48px_rgba(15,23,42,0.18)] outline-none ring-1 ring-zinc-950/10 focus-visible:ring-2 focus-visible:ring-zinc-950"
                 key={item.id}
                 onClick={() => setActiveIndex(index)}
                 style={{
@@ -133,12 +136,12 @@ export default function AboutGalleryWheel({ items }: { items: ActivityItem[] }) 
           })}
         </div>
 
-        <div className="min-w-0 sm:max-w-[22rem] sm:pl-2">
+        <div className="relative z-10 min-w-0 py-2 sm:max-w-[22rem]">
           <AnimatePresence mode="wait">
             <motion.h3
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
               aria-live="polite"
-              className="font-rostex-regular text-[clamp(1.35rem,3.4vw,2.45rem)] uppercase leading-[1.02] text-zinc-950 [overflow-wrap:anywhere]"
+              className="font-open-sans-bold text-[clamp(1.35rem,3.4vw,2.45rem)] leading-[1.02] text-zinc-950 [overflow-wrap:anywhere]"
               exit={{ opacity: 0, x: -18, filter: "blur(6px)" }}
               initial={{ opacity: 0, x: 18, filter: "blur(6px)" }}
               key={activeItem.id}

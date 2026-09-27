@@ -39,7 +39,7 @@ export default function HomePage({ intro }: { intro: IntroContent }) {
               )}
             </div>
             <div className="theme-portrait-orb absolute bottom-[8%] left-[10%] right-[10%] top-[6%]" />
-            <div className="relative z-30 -mt-20 w-full md:-mt-24 lg:-mt-32">
+            <div className="relative z-30 -mt-32 w-full md:-mt-40 lg:-mt-48">
               <div className="pointer-events-none absolute bottom-[6%] left-1/2 h-[64%] w-[58%] -translate-x-1/2 rounded-full bg-black/30 blur-3xl" />
               <motion.img
                 alt="Murshida portrait"

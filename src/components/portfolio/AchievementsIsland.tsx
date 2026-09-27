@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { AchievementItem } from "@/types/content";
 
@@ -38,22 +38,83 @@ function PlaceholderPanel({ index }: { index: number }) {
   );
 }
 
-function AchievementCardBody({ imageIndex, item }: { imageIndex: number; item: AchievementItem }) {
+function AchievementTitle({
+  achievementId,
+  onMarqueeDurationChange,
+  title
+}: {
+  achievementId: string;
+  onMarqueeDurationChange: (achievementId: string, durationMs: number) => void;
+  title: string;
+}) {
+  const viewportRef = useRef<HTMLHeadingElement | null>(null);
+  const textRef = useRef<HTMLSpanElement | null>(null);
+  const [overflowDistance, setOverflowDistance] = useState(0);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const text = textRef.current;
+
+    if (!viewport || !text) {
+      return;
+    }
+
+    const measureOverflow = () => {
+      const viewportStyle = window.getComputedStyle(viewport);
+      const horizontalPadding = Number.parseFloat(viewportStyle.paddingLeft) + Number.parseFloat(viewportStyle.paddingRight);
+      const visibleWidth = viewport.clientWidth - horizontalPadding;
+      const rawDistance = text.getBoundingClientRect().width - visibleWidth;
+      const distance = rawDistance > 0 ? Math.ceil(rawDistance) + 2 : 0;
+      setOverflowDistance(distance);
+      onMarqueeDurationChange(achievementId, distance > 0 ? Math.max(3, distance / 24) * 1000 : 0);
+    };
+
+    measureOverflow();
+
+    const resizeObserver = new ResizeObserver(measureOverflow);
+    resizeObserver.observe(viewport);
+    resizeObserver.observe(text);
+
+    return () => resizeObserver.disconnect();
+  }, [achievementId, onMarqueeDurationChange, title]);
+
+  const isOverflowing = overflowDistance > 0;
+
+  return (
+    <h2
+      ref={viewportRef}
+      className="w-[min(78vw,17rem)] max-w-none self-center overflow-hidden whitespace-nowrap px-2 text-center text-sm font-semibold uppercase leading-tight tracking-normal sm:text-base"
+    >
+      <motion.span
+        ref={textRef}
+        animate={isOverflowing ? { x: [0, -overflowDistance] } : { x: 0 }}
+        className={`block w-max ${isOverflowing ? "" : "mx-auto"}`}
+        transition={
+          isOverflowing
+            ? { duration: Math.max(3, overflowDistance / 24), ease: "linear" }
+            : { duration: 0.2 }
+        }
+      >
+        {title}
+      </motion.span>
+    </h2>
+  );
+}
+
+function AchievementCardBody({
+  imageIndex,
+  item,
+  onMarqueeDurationChange
+}: {
+  imageIndex: number;
+  item: AchievementItem;
+  onMarqueeDurationChange: (achievementId: string, durationMs: number) => void;
+}) {
   const useUploadedImage = shouldUseImage(item.image_url);
 
   return (
-    <article
-      className="flex h-full flex-col overflow-hidden rounded-[1.35rem] p-3 text-white ring-1 ring-white/10"
-      style={{
-        backgroundColor: "#0a0c10",
-        boxShadow: "0 22px 58px rgba(15, 23, 42, 0.34)"
-      }}
-    >
-      <h2 className="mt-8 min-h-[3rem] px-7 text-center text-[clamp(1.08rem,4.4vw,1.38rem)] font-medium uppercase leading-tight tracking-normal [overflow-wrap:anywhere]">
-        {item.title || "Achievement"}
-      </h2>
-
-      <div className="relative mx-1 mt-3 overflow-hidden rounded-xl bg-white/8">
+    <article className="flex flex-col gap-3 text-white">
+      <div className="relative overflow-hidden rounded-md bg-white shadow-[0_14px_32px_rgba(0,0,0,0.16)]">
         {useUploadedImage ? (
           <img
             alt={item.title || "Achievement"}
@@ -66,7 +127,7 @@ function AchievementCardBody({ imageIndex, item }: { imageIndex: number; item: A
         )}
       </div>
 
-      <span className="mt-auto pb-2" aria-hidden="true" />
+      <AchievementTitle achievementId={item.id} onMarqueeDurationChange={onMarqueeDurationChange} title={item.title || "Achievement"} />
     </article>
   );
 }
@@ -78,7 +139,12 @@ export default function AchievementsIsland({ items }: { items: AchievementItem[]
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(1);
+  const [marqueeDurations, setMarqueeDurations] = useState<Record<string, number>>({});
   const dragStartedRef = useRef(false);
+
+  const handleMarqueeDurationChange = useCallback((achievementId: string, durationMs: number) => {
+    setMarqueeDurations((current) => current[achievementId] === durationMs ? current : { ...current, [achievementId]: durationMs });
+  }, []);
 
   const advance = useCallback(
     (direction = 1) => {
@@ -107,10 +173,12 @@ export default function AchievementsIsland({ items }: { items: AchievementItem[]
       return;
     }
 
-    const intervalId = window.setInterval(() => advance(1), autoAdvanceMs);
+    const activeAchievement = achievements[activeIndex];
+    const delay = Math.max(autoAdvanceMs, marqueeDurations[activeAchievement.id] ?? 0);
+    const timeoutId = window.setTimeout(() => advance(1), delay);
 
-    return () => window.clearInterval(intervalId);
-  }, [achievements.length, advance]);
+    return () => window.clearTimeout(timeoutId);
+  }, [achievements, activeIndex, advance, marqueeDurations]);
 
   if (achievements.length === 0) {
     return null;
@@ -134,8 +202,8 @@ export default function AchievementsIsland({ items }: { items: AchievementItem[]
   };
 
   return (
-    <section className="relative flex w-full justify-center overflow-visible px-6 py-8 sm:py-10 lg:px-4 lg:py-2">
-      <div className="relative flex min-h-[27rem] w-full max-w-[32rem] items-center justify-center overflow-visible">
+    <section className="relative flex w-full justify-center overflow-visible py-2">
+      <div className="relative flex min-h-[18rem] w-full max-w-[20rem] items-center justify-center overflow-visible">
         <AnimatePresence custom={swipeDirection} initial={false} mode="popLayout">
           <motion.button
             animate={{
@@ -144,7 +212,7 @@ export default function AchievementsIsland({ items }: { items: AchievementItem[]
               x: 0
             }}
             aria-label={`Show next achievement after ${activeAchievement.title || "current achievement"}`}
-            className="absolute aspect-[9/13] w-[min(72vw,18rem)] cursor-pointer touch-pan-y focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-zinc-950 sm:w-[18rem]"
+            className="absolute w-[min(62vw,13rem)] cursor-pointer touch-pan-y focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-white sm:w-[13rem]"
             drag={achievements.length > 1 ? "x" : false}
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.18}
@@ -170,7 +238,11 @@ export default function AchievementsIsland({ items }: { items: AchievementItem[]
             transition={cardTransition}
             type="button"
           >
-            <AchievementCardBody imageIndex={activeIndex} item={activeAchievement} />
+            <AchievementCardBody
+              imageIndex={activeIndex}
+              item={activeAchievement}
+              onMarqueeDurationChange={handleMarqueeDurationChange}
+            />
           </motion.button>
         </AnimatePresence>
       </div>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { defaultContent } from "@/data/defaultContent";
+import { getProjectFontFamily, projectFonts } from "@/data/projectFonts";
 import { cn } from "@/lib/utils";
 import type {
   AchievementItem,
@@ -49,6 +50,12 @@ function normalizePersistedId(value: unknown) {
   return createId();
 }
 
+function normalizeActivityId(value: unknown) {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+    ? value
+    : createId();
+}
+
 function appendUniqueUrl(urls: string[] | undefined, url: string) {
   return Array.from(new Set([...(urls ?? []), url].map((item) => item.trim()).filter(Boolean)));
 }
@@ -56,11 +63,15 @@ function appendUniqueUrl(urls: string[] | undefined, url: string) {
 function normalizeActivitySlots(items: ActivityItem[] | undefined) {
   const sourceItems = items ?? defaultContent.activities;
 
-  return sourceItems.map((item, index) => ({
-    id: normalizePersistedId(item?.id),
-    title: item?.title || `Activity ${index + 1}`,
-    image_url: item?.image_url || ""
-  }));
+  return Array.from({ length: activityCardCount }, (_, index) => {
+    const item = sourceItems[index] ?? defaultContent.activities[index];
+
+    return {
+      id: normalizeActivityId(item?.id),
+      title: item?.title || `Activity ${index + 1}`,
+      image_url: item?.image_url || ""
+    };
+  });
 }
 
 function isSquareImage(file: File) {
@@ -94,9 +105,8 @@ const panelClass = "!rounded-md !border-zinc-200 !bg-white !shadow-none !backdro
 const homepageValueInputClass =
   "!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !shadow-none focus:!border-0 focus:!ring-0";
 const projectAdditionalImageMaxCount = 4;
-const projectDescriptionMaxLength = 240;
+const projectDescriptionMaxLength = 300;
 const experienceDescriptionMaxLength = 220;
-const achievementTitleMaxLength = 28;
 const activityTitleMaxLength = 60;
 const fixedOwnerName = "MURSHIDA P.";
 
@@ -127,6 +137,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
   });
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
 
   const saveIntro = async () => {
     setSaving(true);
@@ -199,10 +210,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               table: "achievements",
-              rows: content.achievements.map((entry) => ({
-                ...entry,
-                title: entry.title.slice(0, achievementTitleMaxLength)
-              }))
+              rows: content.achievements
             })
           })
         ),
@@ -219,9 +227,8 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               table: "activities",
-              rows: content.activities.map((entry, index) => ({
+              rows: content.activities.map((entry) => ({
                 ...entry,
-                id: entry.id || `activity-${index + 1}`,
                 title: entry.title.slice(0, activityTitleMaxLength)
               }))
             })
@@ -280,6 +287,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     const newProject: ProjectItem = {
       id: createId(),
       title: "",
+      title_font: "rostex",
       subtitle: "",
       description: "",
       stack: [],
@@ -1030,13 +1038,12 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                   <div className="flex items-center px-5 py-3">
                     <Input
                       className={homepageValueInputClass}
-                      maxLength={achievementTitleMaxLength}
                       value={item.title}
                       onChange={(event) =>
                         setContent((previous) => ({
                           ...previous,
                           achievements: previous.achievements.map((entry, entryIndex) =>
-                            entryIndex === index ? { ...entry, title: event.target.value.slice(0, achievementTitleMaxLength) } : entry
+                            entryIndex === index ? { ...entry, title: event.target.value } : entry
                           )
                         }))
                       }
@@ -1064,72 +1071,26 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
           </div>
         )}
 
-        {tab === "about" && aboutSection === "activities" && (
-          <div className="overflow-x-auto rounded-md border border-zinc-200">
-            <div className="min-w-[640px] overflow-hidden">
-              <div className="grid grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-                <div className="px-5 py-3">SI NO.</div>
-                <div className="px-5 py-3 text-center">Image</div>
-                <div className="px-5 py-3">Title</div>
-                <div className="px-5 py-3 text-center">Delete</div>
-              </div>
-              {content.activities.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
-                >
-                  <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
-                  <div className="flex items-center px-5 py-3">
-                    <IconUploadButton
-                      accept=".jpeg,.jpg,.png,.webp,.gif"
-                      assetFolder="activities"
-                      currentUrl={item.image_url}
-                      onUploaded={(url) =>
-                        setContent((previous) => ({
-                          ...previous,
-                          activities: previous.activities.map((entry, entryIndex) =>
-                            entryIndex === index ? { ...entry, image_url: url } : entry
-                          )
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center px-5 py-3">
-                    <Input
-                      className={homepageValueInputClass}
-                      maxLength={activityTitleMaxLength}
-                      value={item.title}
-                      onChange={(event) =>
-                        setContent((previous) => ({
-                          ...previous,
-                          activities: previous.activities.map((entry, entryIndex) =>
-                            entryIndex === index ? { ...entry, title: event.target.value.slice(0, activityTitleMaxLength) } : entry
-                          )
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-center px-5 py-3">
-                    <button
-                      aria-label={`Delete ${item.title || "activity"}`}
-                      className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
-                      onClick={() => {
-                        setContent((previous) => ({
-                          ...previous,
-                          activities: previous.activities.filter((entry) => entry.id !== item.id)
-                        }));
-                        void deleteRow("activities", item.id);
-                      }}
-                      type="button"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {tab === "about" && aboutSection === "activities" && (() => {
+          const editingActivity = content.activities.find((activity) => activity.id === editingActivityId);
+
+          if (editingActivity) {
+            return (
+              <ActivityEditor
+                item={editingActivity}
+                onBack={() => setEditingActivityId(null)}
+                onChange={(next) =>
+                  setContent((previous) => ({
+                    ...previous,
+                    activities: previous.activities.map((activity) => (activity.id === next.id ? next : activity))
+                  }))
+                }
+              />
+            );
+          }
+
+          return <ActivitiesTable items={content.activities} onEdit={(item) => setEditingActivityId(item.id)} />;
+        })()}
           </Card>
         </div>
       </main>
@@ -1139,6 +1100,77 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
 function CrudList({ children }: { children: ReactNode }) {
   return <div className="space-y-4">{children}</div>;
+}
+
+function ActivitiesTable({ items, onEdit }: { items: ActivityItem[]; onEdit: (item: ActivityItem) => void }) {
+  return (
+    <div className="overflow-x-auto rounded-md border border-zinc-200">
+      <table className="w-full min-w-[560px] border-collapse text-left">
+        <thead className="bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          <tr>
+            <th className="w-20 border-b border-zinc-200 px-4 py-3">No.</th>
+            <th className="w-24 border-b border-zinc-200 px-4 py-3">Image</th>
+            <th className="border-b border-zinc-200 px-4 py-3">Activity</th>
+            <th className="w-24 border-b border-zinc-200 px-4 py-3 text-center">Edit</th>
+          </tr>
+        </thead>
+        <tbody className="text-sm text-zinc-700">
+          {items.map((item, index) => (
+            <tr className="border-b border-zinc-200 last:border-b-0" key={item.id}>
+              <td className="px-4 py-3 text-zinc-500">{index + 1}</td>
+              <td className="px-4 py-3">
+                {item.image_url ? <img alt="" className="h-10 w-10 rounded-md object-cover" src={item.image_url} /> : <ImagePlus className="h-5 w-5 text-zinc-400" />}
+              </td>
+              <td className="px-4 py-3 font-medium text-zinc-950">{item.title || `Activity ${index + 1}`}</td>
+              <td className="px-4 py-3 text-center">
+                <Button
+                  aria-label={`Edit ${item.title || `activity ${index + 1}`}`}
+                  className="!h-8 !w-8 !rounded-md !p-0 !text-zinc-700"
+                  onClick={() => onEdit(item)}
+                  title="Edit activity"
+                  type="button"
+                  variant="secondary"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ActivityEditor({ item, onChange, onBack }: { item: ActivityItem; onChange: (next: ActivityItem) => void; onBack: () => void }) {
+  return (
+    <div className="space-y-5">
+      <Button className={secondaryActionClass} onClick={onBack} type="button" variant="secondary">
+        <ArrowLeft className="h-4 w-4" />
+        Activities
+      </Button>
+      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_180px]">
+        <div>
+          <Label htmlFor="activity-title">Activity title</Label>
+          <Input
+            id="activity-title"
+            maxLength={activityTitleMaxLength}
+            value={item.title}
+            onChange={(event) => onChange({ ...item, title: event.target.value.slice(0, activityTitleMaxLength) })}
+          />
+        </div>
+        <div>
+          <Label>Activity image</Label>
+          <IconUploadButton
+            accept=".jpeg,.jpg,.png,.webp,.gif"
+            assetFolder="activities"
+            currentUrl={item.image_url}
+            onUploaded={(url) => onChange({ ...item, image_url: url })}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function AdminFieldRow({ label, children }: { label: string; children: ReactNode }) {
@@ -1276,9 +1308,25 @@ function ProjectEditor({
           aria-label="Project title"
           className="!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !text-3xl !font-medium !shadow-none focus:!border-0 focus:!ring-0"
           placeholder="Project title"
+          style={{ fontFamily: getProjectFontFamily(item.title_font) }}
           value={item.title}
           onChange={(event) => onChange({ ...item, title: event.target.value })}
         />
+        <div className="grid max-w-sm gap-2">
+          <Label htmlFor="project-title-font">Project title font</Label>
+          <select
+            className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-400"
+            id="project-title-font"
+            onChange={(event) => onChange({ ...item, title_font: event.target.value })}
+            value={projectFonts.some((font) => font.id === item.title_font) ? item.title_font : projectFonts[0].id}
+          >
+            {projectFonts.map((font) => (
+              <option key={font.id} value={font.id}>
+                {font.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <Input
           aria-label="Project website"
           className="!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !text-base !shadow-none focus:!border-0 focus:!ring-0"

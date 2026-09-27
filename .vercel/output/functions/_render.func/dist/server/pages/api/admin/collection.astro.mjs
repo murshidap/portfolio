@@ -6,18 +6,21 @@ function hasPersistedId(value) {
   return typeof value === "string" && value.trim().length > 0 || typeof value === "number" && Number.isFinite(value);
 }
 function ensureRowMetadata(row, table) {
-  const normalizedProject = table === "projects" ? {
+  const normalizedRow = table === "projects" || table === "achievements" ? {
     ...row,
-    subtitle: row.subtitle ?? "",
+    ...table === "projects" ? {
+      subtitle: row.subtitle ?? "",
+      title_font: typeof row.title_font === "string" && row.title_font.trim() ? row.title_font : "rostex"
+    } : {},
     updated_at: typeof row.updated_at === "string" && row.updated_at.trim() ? row.updated_at : (/* @__PURE__ */ new Date()).toISOString()
   } : row;
-  const normalizedRow = hasPersistedId(row.id) ? normalizedProject : {
-    ...normalizedProject,
+  const rowWithId = hasPersistedId(normalizedRow.id) ? normalizedRow : {
+    ...normalizedRow,
     id: crypto.randomUUID()
   };
   const rowWithCreatedAt = {
-    ...normalizedRow,
-    created_at: typeof normalizedRow.created_at === "string" && normalizedRow.created_at.trim() ? normalizedRow.created_at : (/* @__PURE__ */ new Date()).toISOString()
+    ...rowWithId,
+    created_at: typeof rowWithId.created_at === "string" && rowWithId.created_at.trim() ? rowWithId.created_at : (/* @__PURE__ */ new Date()).toISOString()
   };
   return table === "education" ? { ...rowWithCreatedAt, updated_at: (/* @__PURE__ */ new Date()).toISOString() } : rowWithCreatedAt;
 }

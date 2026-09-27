@@ -22,6 +22,7 @@ export interface SkillItem {
 export interface ProjectItem {
   id: string;
   title: string;
+  title_font?: string;
   subtitle: string;
   description: string;
   stack: string[];

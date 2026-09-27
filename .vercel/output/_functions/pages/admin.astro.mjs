@@ -1,10 +1,11 @@
-import { e as createComponent, k as renderComponent, r as renderTemplate, h as createAstro, m as maybeRenderHead } from '../chunks/astro/server_tE5jNKah.mjs';
+import { e as createComponent, k as renderComponent, r as renderTemplate, h as createAstro, m as maybeRenderHead } from '../chunks/astro/server_CcLXk7l4.mjs';
 import 'piccolore';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { LogOut, Trash2, LoaderCircle, Save, Plus, Eye, Check, Upload, X, ImagePlus, ArrowLeft, ExternalLink, Pencil } from 'lucide-react';
 import { useState } from 'react';
-import { c as cn, B as Button, I as Input, T as Textarea, $ as $$BaseLayout } from '../chunks/BaseLayout_k0i_bco2.mjs';
+import { c as cn, B as Button, I as Input, T as Textarea, $ as $$BaseLayout } from '../chunks/BaseLayout_BDu3dDMQ.mjs';
 import { d as defaultContent } from '../chunks/defaultContent_Cj_9S1DA.mjs';
+import { g as getProjectFontFamily, p as projectFonts } from '../chunks/projectFonts_CdK4UY6B.mjs';
 import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 import { g as getAdminUserFromRequest } from '../chunks/auth_B79Sfj4C.mjs';
 export { renderers } from '../renderers.mjs';
@@ -35,6 +36,7 @@ const tabs = [
   { key: "certificates", label: "Certificates" }
 ];
 const createId = () => crypto.randomUUID();
+const activityCardCount = 8;
 function normalizePersistedId(value) {
   if (typeof value === "string" && value.trim()) {
     return value;
@@ -44,16 +46,22 @@ function normalizePersistedId(value) {
   }
   return createId();
 }
+function normalizeActivityId(value) {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value : createId();
+}
 function appendUniqueUrl(urls, url) {
   return Array.from(new Set([...urls ?? [], url].map((item) => item.trim()).filter(Boolean)));
 }
 function normalizeActivitySlots(items) {
   const sourceItems = items ?? defaultContent.activities;
-  return sourceItems.map((item, index) => ({
-    id: normalizePersistedId(item?.id),
-    title: item?.title || `Activity ${index + 1}`,
-    image_url: item?.image_url || ""
-  }));
+  return Array.from({ length: activityCardCount }, (_, index) => {
+    const item = sourceItems[index] ?? defaultContent.activities[index];
+    return {
+      id: normalizeActivityId(item?.id),
+      title: item?.title || `Activity ${index + 1}`,
+      image_url: item?.image_url || ""
+    };
+  });
 }
 function isSquareImage(file) {
   return new Promise((resolve) => {
@@ -76,9 +84,8 @@ const destructiveActionClass = "!h-9 !rounded-md !border-zinc-300 !bg-white !px-
 const panelClass = "!rounded-md !border-zinc-200 !bg-white !shadow-none !backdrop-blur-none";
 const homepageValueInputClass = "!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !shadow-none focus:!border-0 focus:!ring-0";
 const projectAdditionalImageMaxCount = 4;
-const projectDescriptionMaxLength = 240;
+const projectDescriptionMaxLength = 300;
 const experienceDescriptionMaxLength = 220;
-const achievementTitleMaxLength = 28;
 const activityTitleMaxLength = 60;
 const fixedOwnerName = "MURSHIDA P.";
 async function parseResponse(response) {
@@ -106,6 +113,7 @@ function AdminApp({ authenticated, initialContent }) {
   });
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [editingExperienceId, setEditingExperienceId] = useState(null);
+  const [editingActivityId, setEditingActivityId] = useState(null);
   const saveIntro = async () => {
     setSaving(true);
     setMessage("");
@@ -170,10 +178,7 @@ function AdminApp({ authenticated, initialContent }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               table: "achievements",
-              rows: content.achievements.map((entry) => ({
-                ...entry,
-                title: entry.title.slice(0, achievementTitleMaxLength)
-              }))
+              rows: content.achievements
             })
           })
         ),
@@ -190,9 +195,8 @@ function AdminApp({ authenticated, initialContent }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               table: "activities",
-              rows: content.activities.map((entry, index) => ({
+              rows: content.activities.map((entry) => ({
                 ...entry,
-                id: entry.id || `activity-${index + 1}`,
                 title: entry.title.slice(0, activityTitleMaxLength)
               }))
             })
@@ -246,6 +250,7 @@ function AdminApp({ authenticated, initialContent }) {
     const newProject = {
       id: createId(),
       title: "",
+      title_font: "rostex",
       subtitle: "",
       description: "",
       stack: [],
@@ -898,12 +903,11 @@ function AdminApp({ authenticated, initialContent }) {
                   Input,
                   {
                     className: homepageValueInputClass,
-                    maxLength: achievementTitleMaxLength,
                     value: item.title,
                     onChange: (event) => setContent((previous) => ({
                       ...previous,
                       achievements: previous.achievements.map(
-                        (entry, entryIndex) => entryIndex === index ? { ...entry, title: event.target.value.slice(0, achievementTitleMaxLength) } : entry
+                        (entry, entryIndex) => entryIndex === index ? { ...entry, title: event.target.value } : entry
                       )
                     }))
                   }
@@ -929,74 +933,90 @@ function AdminApp({ authenticated, initialContent }) {
             item.id
           ))
         ] }) }),
-        tab === "about" && aboutSection === "activities" && /* @__PURE__ */ jsx("div", { className: "overflow-x-auto rounded-md border border-zinc-200", children: /* @__PURE__ */ jsxs("div", { className: "min-w-[640px] overflow-hidden", children: [
-          /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500", children: [
-            /* @__PURE__ */ jsx("div", { className: "px-5 py-3", children: "SI NO." }),
-            /* @__PURE__ */ jsx("div", { className: "px-5 py-3 text-center", children: "Image" }),
-            /* @__PURE__ */ jsx("div", { className: "px-5 py-3", children: "Title" }),
-            /* @__PURE__ */ jsx("div", { className: "px-5 py-3 text-center", children: "Delete" })
-          ] }),
-          content.activities.map((item, index) => /* @__PURE__ */ jsxs(
-            "div",
-            {
-              className: "grid min-h-14 grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0",
-              children: [
-                /* @__PURE__ */ jsx("div", { className: "flex items-center px-5 py-3 text-sm text-zinc-500", children: index + 1 }),
-                /* @__PURE__ */ jsx("div", { className: "flex items-center px-5 py-3", children: /* @__PURE__ */ jsx(
-                  IconUploadButton,
-                  {
-                    accept: ".jpeg,.jpg,.png,.webp,.gif",
-                    assetFolder: "activities",
-                    currentUrl: item.image_url,
-                    onUploaded: (url) => setContent((previous) => ({
-                      ...previous,
-                      activities: previous.activities.map(
-                        (entry, entryIndex) => entryIndex === index ? { ...entry, image_url: url } : entry
-                      )
-                    }))
-                  }
-                ) }),
-                /* @__PURE__ */ jsx("div", { className: "flex items-center px-5 py-3", children: /* @__PURE__ */ jsx(
-                  Input,
-                  {
-                    className: homepageValueInputClass,
-                    maxLength: activityTitleMaxLength,
-                    value: item.title,
-                    onChange: (event) => setContent((previous) => ({
-                      ...previous,
-                      activities: previous.activities.map(
-                        (entry, entryIndex) => entryIndex === index ? { ...entry, title: event.target.value.slice(0, activityTitleMaxLength) } : entry
-                      )
-                    }))
-                  }
-                ) }),
-                /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center px-5 py-3", children: /* @__PURE__ */ jsx(
-                  "button",
-                  {
-                    "aria-label": `Delete ${item.title || "activity"}`,
-                    className: "grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black",
-                    onClick: () => {
-                      setContent((previous) => ({
-                        ...previous,
-                        activities: previous.activities.filter((entry) => entry.id !== item.id)
-                      }));
-                      void deleteRow("activities", item.id);
-                    },
-                    type: "button",
-                    children: /* @__PURE__ */ jsx(Trash2, { className: "h-4 w-4" })
-                  }
-                ) })
-              ]
-            },
-            item.id
-          ))
-        ] }) })
+        tab === "about" && aboutSection === "activities" && (() => {
+          const editingActivity = content.activities.find((activity) => activity.id === editingActivityId);
+          if (editingActivity) {
+            return /* @__PURE__ */ jsx(
+              ActivityEditor,
+              {
+                item: editingActivity,
+                onBack: () => setEditingActivityId(null),
+                onChange: (next) => setContent((previous) => ({
+                  ...previous,
+                  activities: previous.activities.map((activity) => activity.id === next.id ? next : activity)
+                }))
+              }
+            );
+          }
+          return /* @__PURE__ */ jsx(ActivitiesTable, { items: content.activities, onEdit: (item) => setEditingActivityId(item.id) });
+        })()
       ] }) })
     ] })
   ] });
 }
 function CrudList({ children }) {
   return /* @__PURE__ */ jsx("div", { className: "space-y-4", children });
+}
+function ActivitiesTable({ items, onEdit }) {
+  return /* @__PURE__ */ jsx("div", { className: "overflow-x-auto rounded-md border border-zinc-200", children: /* @__PURE__ */ jsxs("table", { className: "w-full min-w-[560px] border-collapse text-left", children: [
+    /* @__PURE__ */ jsx("thead", { className: "bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500", children: /* @__PURE__ */ jsxs("tr", { children: [
+      /* @__PURE__ */ jsx("th", { className: "w-20 border-b border-zinc-200 px-4 py-3", children: "No." }),
+      /* @__PURE__ */ jsx("th", { className: "w-24 border-b border-zinc-200 px-4 py-3", children: "Image" }),
+      /* @__PURE__ */ jsx("th", { className: "border-b border-zinc-200 px-4 py-3", children: "Activity" }),
+      /* @__PURE__ */ jsx("th", { className: "w-24 border-b border-zinc-200 px-4 py-3 text-center", children: "Edit" })
+    ] }) }),
+    /* @__PURE__ */ jsx("tbody", { className: "text-sm text-zinc-700", children: items.map((item, index) => /* @__PURE__ */ jsxs("tr", { className: "border-b border-zinc-200 last:border-b-0", children: [
+      /* @__PURE__ */ jsx("td", { className: "px-4 py-3 text-zinc-500", children: index + 1 }),
+      /* @__PURE__ */ jsx("td", { className: "px-4 py-3", children: item.image_url ? /* @__PURE__ */ jsx("img", { alt: "", className: "h-10 w-10 rounded-md object-cover", src: item.image_url }) : /* @__PURE__ */ jsx(ImagePlus, { className: "h-5 w-5 text-zinc-400" }) }),
+      /* @__PURE__ */ jsx("td", { className: "px-4 py-3 font-medium text-zinc-950", children: item.title || `Activity ${index + 1}` }),
+      /* @__PURE__ */ jsx("td", { className: "px-4 py-3 text-center", children: /* @__PURE__ */ jsx(
+        Button,
+        {
+          "aria-label": `Edit ${item.title || `activity ${index + 1}`}`,
+          className: "!h-8 !w-8 !rounded-md !p-0 !text-zinc-700",
+          onClick: () => onEdit(item),
+          title: "Edit activity",
+          type: "button",
+          variant: "secondary",
+          children: /* @__PURE__ */ jsx(Pencil, { className: "h-3.5 w-3.5" })
+        }
+      ) })
+    ] }, item.id)) })
+  ] }) });
+}
+function ActivityEditor({ item, onChange, onBack }) {
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
+    /* @__PURE__ */ jsxs(Button, { className: secondaryActionClass, onClick: onBack, type: "button", variant: "secondary", children: [
+      /* @__PURE__ */ jsx(ArrowLeft, { className: "h-4 w-4" }),
+      "Activities"
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "grid gap-5 md:grid-cols-[minmax(0,1fr)_180px]", children: [
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx(Label, { htmlFor: "activity-title", children: "Activity title" }),
+        /* @__PURE__ */ jsx(
+          Input,
+          {
+            id: "activity-title",
+            maxLength: activityTitleMaxLength,
+            value: item.title,
+            onChange: (event) => onChange({ ...item, title: event.target.value.slice(0, activityTitleMaxLength) })
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx(Label, { children: "Activity image" }),
+        /* @__PURE__ */ jsx(
+          IconUploadButton,
+          {
+            accept: ".jpeg,.jpg,.png,.webp,.gif",
+            assetFolder: "activities",
+            currentUrl: item.image_url,
+            onUploaded: (url) => onChange({ ...item, image_url: url })
+          }
+        )
+      ] })
+    ] })
+  ] });
 }
 function AdminFieldRow({ label, children }) {
   return /* @__PURE__ */ jsxs("div", { className: "grid border-b border-zinc-200 last:border-b-0 md:grid-cols-[220px_minmax(0,1fr)]", children: [
@@ -1101,10 +1121,24 @@ function ProjectEditor({
           "aria-label": "Project title",
           className: "!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !text-3xl !font-medium !shadow-none focus:!border-0 focus:!ring-0",
           placeholder: "Project title",
+          style: { fontFamily: getProjectFontFamily(item.title_font) },
           value: item.title,
           onChange: (event) => onChange({ ...item, title: event.target.value })
         }
       ),
+      /* @__PURE__ */ jsxs("div", { className: "grid max-w-sm gap-2", children: [
+        /* @__PURE__ */ jsx(Label, { htmlFor: "project-title-font", children: "Project title font" }),
+        /* @__PURE__ */ jsx(
+          "select",
+          {
+            className: "h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-400",
+            id: "project-title-font",
+            onChange: (event) => onChange({ ...item, title_font: event.target.value }),
+            value: projectFonts.some((font) => font.id === item.title_font) ? item.title_font : projectFonts[0].id,
+            children: projectFonts.map((font) => /* @__PURE__ */ jsx("option", { value: font.id, children: font.label }, font.id))
+          }
+        )
+      ] }),
       /* @__PURE__ */ jsx(
         Input,
         {

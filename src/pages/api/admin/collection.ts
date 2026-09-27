@@ -13,25 +13,30 @@ function hasPersistedId(value: unknown) {
 }
 
 function ensureRowMetadata(row: Record<string, unknown>, table: string) {
-  const normalizedProject = table === "projects"
+  const normalizedRow = table === "projects" || table === "achievements"
     ? {
         ...row,
-        subtitle: row.subtitle ?? "",
+        ...(table === "projects"
+          ? {
+              subtitle: row.subtitle ?? "",
+              title_font: typeof row.title_font === "string" && row.title_font.trim() ? row.title_font : "rostex"
+            }
+          : {}),
         updated_at: typeof row.updated_at === "string" && row.updated_at.trim() ? row.updated_at : new Date().toISOString()
       }
     : row;
-  const normalizedRow = hasPersistedId(row.id)
-    ? normalizedProject
+  const rowWithId = hasPersistedId(normalizedRow.id)
+    ? normalizedRow
     : {
-        ...normalizedProject,
+        ...normalizedRow,
         id: crypto.randomUUID()
       };
 
   const rowWithCreatedAt = {
-    ...normalizedRow,
+    ...rowWithId,
     created_at:
-      typeof normalizedRow.created_at === "string" && normalizedRow.created_at.trim()
-        ? normalizedRow.created_at
+      typeof rowWithId.created_at === "string" && rowWithId.created_at.trim()
+        ? rowWithId.created_at
         : new Date().toISOString(),
   };
 
