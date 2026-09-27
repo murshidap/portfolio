@@ -1,9 +1,9 @@
-import { e as createComponent, k as renderComponent, r as renderTemplate, h as createAstro, m as maybeRenderHead } from '../chunks/astro/server_CcLXk7l4.mjs';
+import { e as createComponent, k as renderComponent, r as renderTemplate, h as createAstro, m as maybeRenderHead } from '../chunks/astro/server_Dh7I1v3r.mjs';
 import 'piccolore';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { LogOut, Trash2, LoaderCircle, Save, Plus, Eye, Check, Upload, X, ImagePlus, ArrowLeft, ExternalLink, Pencil } from 'lucide-react';
 import { useState } from 'react';
-import { c as cn, B as Button, I as Input, T as Textarea, $ as $$BaseLayout } from '../chunks/BaseLayout_BDu3dDMQ.mjs';
+import { c as cn, B as Button, I as Input, T as Textarea, $ as $$BaseLayout } from '../chunks/BaseLayout_DwRvXjvw.mjs';
 import { d as defaultContent } from '../chunks/defaultContent_Cj_9S1DA.mjs';
 import { g as getProjectFontFamily, p as projectFonts } from '../chunks/projectFonts_CdK4UY6B.mjs';
 import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';

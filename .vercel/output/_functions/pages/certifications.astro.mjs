@@ -1,7 +1,7 @@
-import { e as createComponent, m as maybeRenderHead, g as addAttribute, r as renderTemplate, h as createAstro, k as renderComponent } from '../chunks/astro/server_CcLXk7l4.mjs';
+import { e as createComponent, m as maybeRenderHead, g as addAttribute, r as renderTemplate, h as createAstro, k as renderComponent } from '../chunks/astro/server_Dh7I1v3r.mjs';
 import 'piccolore';
 import 'clsx';
-import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_5_9lhmgV.mjs';
+import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_Cd8KIly1.mjs';
 import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 export { renderers } from '../renderers.mjs';
 

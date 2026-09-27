@@ -1,11 +1,11 @@
-import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_CcLXk7l4.mjs';
+import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_Dh7I1v3r.mjs';
 import 'piccolore';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { useState } from 'react';
-import { C as ContactModal, P as PORTFOLIO_THEMES, D as DEFAULT_THEME_INDEX, $ as $$PortfolioShell } from '../chunks/PortfolioShell_5_9lhmgV.mjs';
-import { B as Button } from '../chunks/BaseLayout_BDu3dDMQ.mjs';
+import { C as ContactModal, P as PORTFOLIO_THEMES, D as DEFAULT_THEME_INDEX, $ as $$PortfolioShell } from '../chunks/PortfolioShell_Cd8KIly1.mjs';
+import { B as Button } from '../chunks/BaseLayout_DwRvXjvw.mjs';
 import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
 export { renderers } from '../renderers.mjs';
 
