@@ -3,11 +3,11 @@ import 'piccolore';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { LogOut, Trash2, LoaderCircle, Save, Plus, Eye, Check, Upload, X, ImagePlus, ArrowLeft, ExternalLink, Pencil } from 'lucide-react';
 import { useState } from 'react';
-import { c as cn, B as Button, I as Input, T as Textarea, $ as $$BaseLayout } from '../chunks/BaseLayout_DwRvXjvw.mjs';
+import { c as cn, B as Button, I as Input, T as Textarea, $ as $$BaseLayout } from '../chunks/BaseLayout_v141w-eY.mjs';
 import { d as defaultContent } from '../chunks/defaultContent_Cj_9S1DA.mjs';
 import { g as getProjectFontFamily, p as projectFonts } from '../chunks/projectFonts_CdK4UY6B.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_BKUd_h60.mjs';
-import { g as getAdminUserFromRequest } from '../chunks/auth_CI1zUUat.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_Ch1Ctvhc.mjs';
+import { g as getAdminUserFromRequest } from '../chunks/auth_BZ3gyILm.mjs';
 export { renderers } from '../renderers.mjs';
 
 function Card({ className, ...props }) {
@@ -91,7 +91,7 @@ const fixedOwnerName = "MURSHIDA P.";
 async function parseResponse(response) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload.error ?? "Request failed.");
+    throw new Error(payload.error ?? `Request failed (${response.status}).`);
   }
   return payload;
 }
@@ -1439,47 +1439,55 @@ function IconUploadButton({
   accept
 }) {
   const [uploading, setUploading] = useState(false);
-  return /* @__PURE__ */ jsxs(
-    "label",
-    {
-      className: cn(
-        "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-black",
-        currentUrl ? "text-zinc-950" : ""
-      ),
-      title: currentUrl ? "Replace icon image" : "Upload icon image",
-      children: [
-        uploading ? /* @__PURE__ */ jsx(LoaderCircle, { className: "h-4 w-4 animate-spin" }) : currentUrl ? /* @__PURE__ */ jsx("img", { alt: "", className: "h-8 w-8 rounded object-cover", src: currentUrl }) : /* @__PURE__ */ jsx(ImagePlus, { className: "h-5 w-5" }),
-        /* @__PURE__ */ jsx(
-          "input",
-          {
-            accept,
-            className: "hidden",
-            onChange: async (event) => {
-              const file = event.target.files?.[0];
-              if (!file) return;
-              const formData = new FormData();
-              formData.append("file", file);
-              formData.append("folder", assetFolder);
-              formData.append("currentUrl", currentUrl);
-              setUploading(true);
-              try {
-                const payload = await parseResponse(
-                  await fetch("/api/admin/upload", {
-                    method: "POST",
-                    body: formData
-                  })
-                );
-                onUploaded(payload.url);
-              } finally {
-                setUploading(false);
-              }
-            },
-            type: "file"
-          }
-        )
-      ]
-    }
-  );
+  const [uploadError, setUploadError] = useState("");
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center", children: [
+    /* @__PURE__ */ jsxs(
+      "label",
+      {
+        className: cn(
+          "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-black",
+          currentUrl ? "text-zinc-950" : ""
+        ),
+        title: currentUrl ? "Replace icon image" : "Upload icon image",
+        children: [
+          uploading ? /* @__PURE__ */ jsx(LoaderCircle, { className: "h-4 w-4 animate-spin" }) : currentUrl ? /* @__PURE__ */ jsx("img", { alt: "", className: "h-8 w-8 rounded object-cover", src: currentUrl }) : /* @__PURE__ */ jsx(ImagePlus, { className: "h-5 w-5" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              accept,
+              className: "hidden",
+              onChange: async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                setUploadError("");
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("folder", assetFolder);
+                formData.append("currentUrl", currentUrl);
+                setUploading(true);
+                try {
+                  const payload = await parseResponse(
+                    await fetch("/api/admin/upload", {
+                      method: "POST",
+                      body: formData
+                    })
+                  );
+                  onUploaded(payload.url);
+                } catch (error) {
+                  setUploadError(error instanceof Error ? error.message : "Upload failed.");
+                } finally {
+                  setUploading(false);
+                  event.target.value = "";
+                }
+              },
+              type: "file"
+            }
+          )
+        ]
+      }
+    ),
+    uploadError ? /* @__PURE__ */ jsx("span", { className: "mt-1 max-w-28 text-center text-[10px] leading-tight text-red-600", role: "alert", children: uploadError }) : null
+  ] });
 }
 function AssetUpload({
   value,

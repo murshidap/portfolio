@@ -1,4 +1,4 @@
-import { i as isSameOriginAdminRequest, f as forbiddenResponse, g as getAdminUserFromRequest, a as getAdminServerSupabase } from '../../../chunks/auth_CI1zUUat.mjs';
+import { i as isSameOriginAdminRequest, f as forbiddenResponse, g as getAdminUserFromRequest, a as getAdminServerSupabase } from '../../../chunks/auth_BZ3gyILm.mjs';
 import { d as defaultContent } from '../../../chunks/defaultContent_Cj_9S1DA.mjs';
 export { renderers } from '../../../renderers.mjs';
 
