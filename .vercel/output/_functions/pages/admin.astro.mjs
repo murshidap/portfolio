@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { c as cn, B as Button, I as Input, T as Textarea, $ as $$BaseLayout } from '../chunks/BaseLayout_DwRvXjvw.mjs';
 import { d as defaultContent } from '../chunks/defaultContent_Cj_9S1DA.mjs';
 import { g as getProjectFontFamily, p as projectFonts } from '../chunks/projectFonts_CdK4UY6B.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
-import { g as getAdminUserFromRequest } from '../chunks/auth_B79Sfj4C.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_BKUd_h60.mjs';
+import { g as getAdminUserFromRequest } from '../chunks/auth_CI1zUUat.mjs';
 export { renderers } from '../renderers.mjs';
 
 function Card({ className, ...props }) {

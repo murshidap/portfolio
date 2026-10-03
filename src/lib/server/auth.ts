@@ -15,7 +15,21 @@ export function isSameOriginAdminRequest(request: Request) {
     return true;
   }
 
-  return origin === new URL(request.url).origin;
+  try {
+    const originUrl = new URL(origin);
+    const requestUrl = new URL(request.url);
+    const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+    const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+
+    if (!forwardedHost) {
+      return originUrl.origin === requestUrl.origin;
+    }
+
+    const protocol = forwardedProtocol ?? requestUrl.protocol.replace(":", "");
+    return originUrl.protocol === `${protocol}:` && originUrl.host === forwardedHost;
+  } catch {
+    return false;
+  }
 }
 
 export function forbiddenResponse() {

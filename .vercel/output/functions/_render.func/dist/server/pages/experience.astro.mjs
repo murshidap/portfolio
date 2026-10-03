@@ -2,7 +2,7 @@ import { e as createComponent, m as maybeRenderHead, r as renderTemplate, h as c
 import 'piccolore';
 import 'clsx';
 import { $ as $$PortfolioShell } from '../chunks/PortfolioShell_Cd8KIly1.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_BKUd_h60.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Astro = createAstro();

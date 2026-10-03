@@ -6,7 +6,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { useState } from 'react';
 import { C as ContactModal, P as PORTFOLIO_THEMES, D as DEFAULT_THEME_INDEX, $ as $$PortfolioShell } from '../chunks/PortfolioShell_Cd8KIly1.mjs';
 import { B as Button } from '../chunks/BaseLayout_DwRvXjvw.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_BKUd_h60.mjs';
 export { renderers } from '../renderers.mjs';
 
 function ConstellationWidget({ activeIndex, themes }) {

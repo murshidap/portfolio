@@ -5,7 +5,7 @@ import { jsx, jsxs } from 'react/jsx-runtime';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { c as cn } from '../chunks/BaseLayout_DwRvXjvw.mjs';
-import { f as fetchPortfolioContent } from '../chunks/content_DBw6s_dR.mjs';
+import { f as fetchPortfolioContent } from '../chunks/content_BKUd_h60.mjs';
 export { renderers } from '../renderers.mjs';
 
 const skillSlotPoints = [
