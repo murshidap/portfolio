@@ -113,7 +113,7 @@ const fixedOwnerName = "MURSHIDA P.";
 async function parseResponse(response: Response) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload.error ?? "Request failed.");
+    throw new Error(payload.error ?? `Request failed (${response.status}).`);
   }
   return payload;
 }
@@ -1673,50 +1673,62 @@ function IconUploadButton({
   accept: string;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   return (
-    <label
-      className={cn(
-        "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-black",
-        currentUrl ? "text-zinc-950" : ""
-      )}
-      title={currentUrl ? "Replace icon image" : "Upload icon image"}
-    >
-      {uploading ? (
-        <LoaderCircle className="h-4 w-4 animate-spin" />
-      ) : currentUrl ? (
-        <img alt="" className="h-8 w-8 rounded object-cover" src={currentUrl} />
-      ) : (
-        <ImagePlus className="h-5 w-5" />
-      )}
-      <input
-        accept={accept}
-        className="hidden"
-        onChange={async (event) => {
-          const file = event.target.files?.[0];
-          if (!file) return;
+    <div className="flex flex-col items-center">
+      <label
+        className={cn(
+          "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-black",
+          currentUrl ? "text-zinc-950" : ""
+        )}
+        title={currentUrl ? "Replace icon image" : "Upload icon image"}
+      >
+        {uploading ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" />
+        ) : currentUrl ? (
+          <img alt="" className="h-8 w-8 rounded object-cover" src={currentUrl} />
+        ) : (
+          <ImagePlus className="h-5 w-5" />
+        )}
+        <input
+          accept={accept}
+          className="hidden"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
 
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("folder", assetFolder);
-          formData.append("currentUrl", currentUrl);
+            setUploadError("");
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("folder", assetFolder);
+            formData.append("currentUrl", currentUrl);
 
-          setUploading(true);
-          try {
-            const payload = await parseResponse(
-              await fetch("/api/admin/upload", {
-                method: "POST",
-                body: formData
-              })
-            );
-            onUploaded(payload.url);
-          } finally {
-            setUploading(false);
-          }
-        }}
-        type="file"
-      />
-    </label>
+            setUploading(true);
+            try {
+              const payload = await parseResponse(
+                await fetch("/api/admin/upload", {
+                  method: "POST",
+                  body: formData
+                })
+              );
+              onUploaded(payload.url);
+            } catch (error) {
+              setUploadError(error instanceof Error ? error.message : "Upload failed.");
+            } finally {
+              setUploading(false);
+              event.target.value = "";
+            }
+          }}
+          type="file"
+        />
+      </label>
+      {uploadError ? (
+        <span className="mt-1 max-w-28 text-center text-[10px] leading-tight text-red-600" role="alert">
+          {uploadError}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

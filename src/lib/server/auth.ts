@@ -18,8 +18,11 @@ export function isSameOriginAdminRequest(request: Request) {
   try {
     const originUrl = new URL(origin);
     const requestUrl = new URL(request.url);
-    const forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-    const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+    const forwardedHost = (request.headers.get("x-forwarded-host") ?? request.headers.get("host"))
+      ?.split(",")[0]
+      ?.trim()
+      .toLowerCase();
+    const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
 
     if (!forwardedHost) {
       return originUrl.origin === requestUrl.origin;
