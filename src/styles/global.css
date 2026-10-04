@@ -329,6 +329,18 @@ textarea {
   text-shadow: none;
 }
 
+.home-role-outline {
+  -webkit-text-stroke: 1px rgba(9, 9, 11, 0.08);
+  color: transparent;
+}
+
+@media (max-width: 767px) {
+  .home-role-heading {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+    transform: none;
+  }
+}
+
 .theme-muted-copy {
   color: var(--theme-muted-text);
 }

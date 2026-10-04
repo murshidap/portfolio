@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, ExternalLink, Eye, ImagePlus, LoaderCircle, LogOut, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, ExternalLink, Eye, ImagePlus, LoaderCircle, LogOut, Minus, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -109,6 +109,15 @@ const projectDescriptionMaxLength = 300;
 const experienceDescriptionMaxLength = 220;
 const activityTitleMaxLength = 60;
 const fixedOwnerName = "MURSHIDA P.";
+const roleScaleMin = 60;
+const roleScaleMax = 150;
+const roleScaleStep = 5;
+
+function normalizeRoleScalePercent(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(roleScaleMax, Math.max(roleScaleMin, value))
+    : 100;
+}
 
 async function parseResponse(response: Response) {
   const payload = await response.json().catch(() => ({}));
@@ -135,6 +144,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
       activities: normalizeActivitySlots(startingContent.activities)
     };
   });
+  const roleScalePercent = normalizeRoleScalePercent(content.intro.role_scale_percent);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
@@ -157,6 +167,18 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const adjustRoleScale = (change: number) => {
+    setContent((previous) => ({
+      ...previous,
+      intro: {
+        ...previous.intro,
+        role_scale_percent: normalizeRoleScalePercent(
+          normalizeRoleScalePercent(previous.intro.role_scale_percent) + change
+        )
+      }
+    }));
   };
 
   const saveList = async (table: CollectionKey, rows: object[]) => {
@@ -599,13 +621,40 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
               />
             </AdminFieldRow>
             <AdminFieldRow label="Role">
-              <Input
-                className={homepageValueInputClass}
-                value={content.intro.role}
-                onChange={(event) =>
-                  setContent((previous) => ({ ...previous, intro: { ...previous.intro, role: event.target.value } }))
-                }
-              />
+              <div className="flex w-full items-center gap-4">
+                <Input
+                  className={cn(homepageValueInputClass, "min-w-0 flex-1")}
+                  value={content.intro.role}
+                  onChange={(event) =>
+                    setContent((previous) => ({ ...previous, intro: { ...previous.intro, role: event.target.value } }))
+                  }
+                />
+                <div className="flex shrink-0 items-center gap-2" aria-label="Role text size">
+                  <Button
+                    aria-label="Decrease role text size"
+                    className={cn(secondaryActionClass, "!h-8 !w-8 !px-0")}
+                    disabled={roleScalePercent <= roleScaleMin}
+                    onClick={() => adjustRoleScale(-roleScaleStep)}
+                    type="button"
+                    variant="secondary"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <output aria-live="polite" className="min-w-12 text-center text-sm tabular-nums">
+                    {roleScalePercent}%
+                  </output>
+                  <Button
+                    aria-label="Increase role text size"
+                    className={cn(secondaryActionClass, "!h-8 !w-8 !px-0")}
+                    disabled={roleScalePercent >= roleScaleMax}
+                    onClick={() => adjustRoleScale(roleScaleStep)}
+                    type="button"
+                    variant="secondary"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </AdminFieldRow>
             <AdminFieldRow label="GitHub">
               <Input

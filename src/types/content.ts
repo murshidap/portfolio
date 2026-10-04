@@ -4,6 +4,7 @@ export interface IntroContent {
   id: string;
   name: string;
   role: string;
+  role_scale_percent?: number;
   intro: string;
   email: string;
   phone: string;

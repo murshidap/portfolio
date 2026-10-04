@@ -16,7 +16,7 @@ export function ConstellationWidget({ activeIndex, themes }: ThemeRailProps) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute left-0 top-[calc(100%+0.55rem)] z-20 h-9 w-full md:top-[calc(100%+0.7rem)]"
+      className="pointer-events-none absolute left-0 top-[calc(100%+0.1rem)] z-20 h-9 w-full md:top-[calc(100%+0.7rem)]"
       style={{ opacity: 0.56 }}
     >
       <div aria-hidden="true" className="relative h-full w-full">
@@ -46,18 +46,18 @@ export function ConstellationWidget({ activeIndex, themes }: ThemeRailProps) {
               }}
             >
               <span
-                className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full md:h-2.5 md:w-2.5"
                 style={{
                   backgroundColor: active ? accent : accentSoft,
                   opacity: active ? 0.24 : 0.05
                 }}
               />
               <span
-                className="absolute left-1/2 top-1/2 h-[0.34rem] w-[0.34rem] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                className="absolute left-1/2 top-1/2 h-[0.25rem] w-[0.25rem] -translate-x-1/2 -translate-y-1/2 rounded-full md:h-[0.34rem] md:w-[0.34rem]"
                 style={{ backgroundColor: "var(--theme-node)" }}
               />
               <span
-                className="absolute left-1/2 top-1/2 h-[0.34rem] w-[0.34rem] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                className="absolute left-1/2 top-1/2 h-[0.25rem] w-[0.25rem] -translate-x-1/2 -translate-y-1/2 rounded-full md:h-[0.34rem] md:w-[0.34rem]"
                 style={{
                   backgroundColor: active ? accent : accentSoft,
                   opacity: active ? 0.92 : 0.68

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState, type WheelEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import type { SkillItem } from "@/types/content";
@@ -12,6 +12,16 @@ const skillSlotPoints = [
   { offset: 1, left: 76, top: 48, scale: 0.72, opacity: 0.58, blur: 3 },
   { offset: 2, left: 92, top: 68, scale: 0.56, opacity: 0.38, blur: 5 },
   { offset: 3, left: 128, top: 72, scale: 0.42, opacity: 0, blur: 8 }
+];
+
+const mobileSkillSlotPoints = [
+  { offset: -3, left: -38, top: 58, scale: 0.42, opacity: 0, blur: 8 },
+  { offset: -2, left: 1, top: 53, scale: 0.56, opacity: 0.38, blur: 5 },
+  { offset: -1, left: 18, top: 45, scale: 0.72, opacity: 0.58, blur: 3 },
+  { offset: 0, left: 50, top: 38, scale: 1, opacity: 1, blur: 0 },
+  { offset: 1, left: 82, top: 45, scale: 0.72, opacity: 0.58, blur: 3 },
+  { offset: 2, left: 99, top: 53, scale: 0.56, opacity: 0.38, blur: 5 },
+  { offset: 3, left: 138, top: 58, scale: 0.42, opacity: 0, blur: 8 }
 ];
 
 const skillFlowTransition = {
@@ -32,9 +42,10 @@ function interpolateValue(from: number, to: number, progress: number) {
   return from + (to - from) * progress;
 }
 
-function getSkillPlacement(relativeOffset: number) {
-  const firstPoint = skillSlotPoints[0];
-  const lastPoint = skillSlotPoints[skillSlotPoints.length - 1];
+function getSkillPlacement(relativeOffset: number, isMobile: boolean) {
+  const slotPoints = isMobile ? mobileSkillSlotPoints : skillSlotPoints;
+  const firstPoint = slotPoints[0];
+  const lastPoint = slotPoints[slotPoints.length - 1];
 
   if (relativeOffset <= firstPoint.offset) {
     return firstPoint;
@@ -44,9 +55,9 @@ function getSkillPlacement(relativeOffset: number) {
     return lastPoint;
   }
 
-  const nextPointIndex = skillSlotPoints.findIndex((point) => point.offset >= relativeOffset);
-  const nextPoint = skillSlotPoints[nextPointIndex];
-  const previousPoint = skillSlotPoints[nextPointIndex - 1] ?? nextPoint;
+  const nextPointIndex = slotPoints.findIndex((point) => point.offset >= relativeOffset);
+  const nextPoint = slotPoints[nextPointIndex];
+  const previousPoint = slotPoints[nextPointIndex - 1] ?? nextPoint;
   const progress = (relativeOffset - previousPoint.offset) / (nextPoint.offset - previousPoint.offset || 1);
 
   return {
@@ -144,6 +155,8 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
     [skills]
   );
   const [activeSkillPosition, setActiveSkillPosition] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const sectionRef = useRef<HTMLElement | null>(null);
   const skillWheelLockRef = useRef(false);
   const skillWheelLockTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const manualResumeTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -151,6 +164,16 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
   const manualScrollActiveRef = useRef(false);
   const activeSkillIndex = skillItems.length > 0 ? wrapIndex(Math.round(activeSkillPosition), skillItems.length) : 0;
   const activeSkill = skillItems.length > 0 ? skillItems[activeSkillIndex] : null;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 639px)");
+    const updateMobileLayout = () => setIsMobile(mediaQuery.matches);
+
+    updateMobileLayout();
+    mediaQuery.addEventListener("change", updateMobileLayout);
+
+    return () => mediaQuery.removeEventListener("change", updateMobileLayout);
+  }, []);
 
   useEffect(() => {
     if (skillItems.length === 0) {
@@ -195,27 +218,7 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
     };
   }, [skillItems.length]);
 
-  if (skillItems.length === 0) {
-    return null;
-  }
-
-  const centerVirtualIndex = Math.round(activeSkillPosition);
-  const visibleSkillPlacements = Array.from({ length: skillItems.length > 1 ? 7 : 1 }, (_, placementIndex) => {
-    const virtualIndex = skillItems.length > 1 ? centerVirtualIndex + placementIndex - 3 : centerVirtualIndex;
-    const relativeOffset = virtualIndex - activeSkillPosition;
-    const placement = getSkillPlacement(relativeOffset);
-    const skillIndex = wrapIndex(virtualIndex, skillItems.length);
-    const skill = skillItems[skillIndex];
-
-    return {
-      key: `${virtualIndex}-${skill.id}-${skill.title}`,
-      placement,
-      relativeOffset,
-      skill
-    };
-  });
-
-  const handleSkillWheel = (event: WheelEvent<HTMLElement>) => {
+  const handleSkillWheel = useCallback((event: WheelEvent) => {
     if (skillItems.length <= 1) {
       return;
     }
@@ -259,10 +262,41 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
       manualScrollActiveRef.current = false;
       manualResumeTimeoutRef.current = null;
     }, skillManualResumeDelay);
-  };
+  }, [skillItems.length]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) {
+      return;
+    }
+
+    section.addEventListener("wheel", handleSkillWheel, { passive: false });
+
+    return () => section.removeEventListener("wheel", handleSkillWheel);
+  }, [handleSkillWheel]);
+
+  if (skillItems.length === 0) {
+    return null;
+  }
+
+  const centerVirtualIndex = Math.round(activeSkillPosition);
+  const visibleSkillPlacements = Array.from({ length: skillItems.length > 1 ? 7 : 1 }, (_, placementIndex) => {
+    const virtualIndex = skillItems.length > 1 ? centerVirtualIndex + placementIndex - 3 : centerVirtualIndex;
+    const relativeOffset = virtualIndex - activeSkillPosition;
+    const placement = getSkillPlacement(relativeOffset, isMobile);
+    const skillIndex = wrapIndex(virtualIndex, skillItems.length);
+    const skill = skillItems[skillIndex];
+
+    return {
+      key: `${virtualIndex}-${skill.id}-${skill.title}`,
+      placement,
+      relativeOffset,
+      skill
+    };
+  });
 
   return (
-    <section className="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center overflow-hidden py-8" onWheel={handleSkillWheel}>
+    <section ref={sectionRef} className="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center overflow-hidden py-8">
       <div className="relative min-h-[430px] overflow-hidden sm:min-h-[500px]">
         <AnimatePresence initial={false}>
           {visibleSkillPlacements.map(({ key, placement, relativeOffset, skill }) => {

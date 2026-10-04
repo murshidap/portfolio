@@ -93,10 +93,10 @@ export default function AboutGalleryWheel({ items }: { items: ActivityItem[] }) 
   return (
     <section
       aria-label="About gallery"
-      className="mt-14 rounded-xl border border-white/80 bg-white/65 p-5 shadow-[0_18px_48px_rgba(15,23,42,0.1)] backdrop-blur-lg sm:p-8"
+      className="mt-14 overflow-hidden rounded-xl border border-white/80 bg-white/65 px-5 py-2 shadow-[0_18px_48px_rgba(15,23,42,0.1)] backdrop-blur-lg sm:overflow-visible sm:p-8"
     >
-      <div className="grid items-center gap-4 sm:gap-8 sm:justify-center sm:grid-cols-[minmax(0,36rem)_minmax(10rem,22rem)]">
-        <div className="relative isolate z-0 h-[34rem] w-full max-w-[36rem] overflow-visible sm:h-[38rem]">
+      <div className="relative grid min-h-[34rem] grid-cols-1 items-center overflow-visible sm:min-h-0 sm:grid-cols-[minmax(0,36rem)_minmax(10rem,22rem)] sm:justify-center sm:gap-8">
+        <div className="relative isolate z-0 -ml-[22.5rem] h-[34rem] w-[34rem] max-w-none overflow-visible sm:ml-0 sm:h-[38rem] sm:w-full sm:max-w-[36rem]">
           {galleryItems.map((item, index) => {
             const placement = getPlacement(index, normalizedActiveIndex, galleryItems.length);
             const isActive = index === normalizedActiveIndex;
@@ -136,7 +136,7 @@ export default function AboutGalleryWheel({ items }: { items: ActivityItem[] }) 
           })}
         </div>
 
-        <div className="relative z-10 min-w-0 py-2 sm:max-w-[22rem]">
+        <div className="absolute right-0 top-1/2 z-10 w-[42%] -translate-y-1/2 py-2 sm:relative sm:right-auto sm:top-auto sm:w-auto sm:translate-y-0 sm:max-w-[22rem]">
           <AnimatePresence mode="wait">
             <motion.h3
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}

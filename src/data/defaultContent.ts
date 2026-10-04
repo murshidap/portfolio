@@ -5,6 +5,7 @@ export const defaultContent: PortfolioContent = {
     id: "intro-default",
     name: "MURSHIDA P.",
     role: "Web Developer",
+    role_scale_percent: 100,
     intro:
       "I am a web developer with a BSc in Computer Science and professional experience working as a Junior Web Developer. I specialize in building modern, responsive, and interactive websites that combine strong visual design with clean, scalable, and reliable development.\n\nI enjoy turning ideas and design concepts into functional websites through thoughtful layouts, smooth interactions, and well-structured code.\n\nAlongside my work in web development, I am currently pursuing an MSc in Computer Science with a specialization in Data Analytics. I am committed to improving my skills, exploring modern technologies, and building web experiences that are both creative and practical.",
     email: "murshida@example.com",

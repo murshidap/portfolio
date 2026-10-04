@@ -155,14 +155,14 @@ export default function ContactActions({ intro }: { intro: IntroContent }) {
   ];
 
   return (
-    <div className="ml-auto flex flex-wrap items-center justify-end gap-4 md:gap-5">
+    <div className="flex w-full flex-col items-start gap-5 md:ml-auto md:w-auto md:flex-row md:items-center md:justify-end md:gap-5">
       <ContactModal email={intro.email} onClose={() => setContactModalOpen(false)} open={contactModalOpen} />
-      <div className="flex items-center justify-end gap-4 md:gap-5">
+      <div className="flex items-center justify-start gap-3 md:justify-end md:gap-5">
         {items.map((item) => (
           <a
             key={item.label}
             aria-label={item.label}
-            className="text-zinc-500 transition hover:text-zinc-950"
+            className="flex h-11 w-11 items-center justify-center text-zinc-500 transition hover:text-zinc-950 md:h-auto md:w-auto"
             href={item.href}
             rel="noreferrer"
             target={item.href.startsWith("http") ? "_blank" : undefined}
@@ -172,7 +172,7 @@ export default function ContactActions({ intro }: { intro: IntroContent }) {
         ))}
         <button
           aria-label="Copy website address"
-          className="text-zinc-500 transition hover:text-zinc-950"
+          className="flex h-11 w-11 items-center justify-center text-zinc-500 transition hover:text-zinc-950 md:h-auto md:w-auto"
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(window.location.href);
@@ -185,14 +185,16 @@ export default function ContactActions({ intro }: { intro: IntroContent }) {
           <Share2 className="h-5 w-5" />
         </button>
       </div>
-      <Button onClick={() => setContactModalOpen(true)} type="button" variant="secondary">
-        Connect
-      </Button>
-      <a download href={intro.resume_url ? "/api/resume" : "#"}>
-        <Button className="min-w-[140px] border-zinc-950 bg-zinc-950 text-sm text-white hover:bg-black">
-          <span>Get Resume</span>
+      <div className="flex items-center justify-start gap-3 md:contents">
+        <Button onClick={() => setContactModalOpen(true)} type="button" variant="secondary">
+          Connect
         </Button>
-      </a>
+        <a download href={intro.resume_url ? "/api/resume" : "#"}>
+          <Button className="min-w-[140px] border-zinc-950 bg-zinc-950 text-sm text-white hover:bg-black">
+            <span>Get Resume</span>
+          </Button>
+        </a>
+      </div>
     </div>
   );
 }

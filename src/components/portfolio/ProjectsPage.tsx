@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type TouchEvent, type WheelEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import { getProjectFontFamily } from "@/data/projectFonts";
@@ -63,6 +63,45 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
       window.clearTimeout(wheelQuietTimeoutRef.current);
     }
   }, []);
+
+  const handleProjectWheel = useCallback((event: WheelEvent) => {
+    if (projects.length <= 1) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (event.deltaY === 0) {
+      return;
+    }
+
+    if (wheelQuietTimeoutRef.current !== null) {
+      window.clearTimeout(wheelQuietTimeoutRef.current);
+    }
+
+    wheelQuietTimeoutRef.current = window.setTimeout(() => {
+      wheelGestureActiveRef.current = false;
+      wheelQuietTimeoutRef.current = null;
+    }, projectWheelQuietDelay);
+
+    if (!wheelGestureActiveRef.current) {
+      wheelGestureActiveRef.current = true;
+      setFocusedProjectIndex((currentIndex) =>
+        Math.min(projects.length - 1, Math.max(0, currentIndex + (event.deltaY > 0 ? 1 : -1)))
+      );
+    }
+  }, [projects.length]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) {
+      return;
+    }
+
+    section.addEventListener("wheel", handleProjectWheel, { passive: false });
+
+    return () => section.removeEventListener("wheel", handleProjectWheel);
+  }, [handleProjectWheel]);
 
   if (projects.length === 0) {
     return null;
@@ -174,32 +213,6 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
     setFocusedProjectIndex((currentIndex) => Math.min(projects.length - 1, Math.max(0, currentIndex + direction)));
   };
 
-  const handleProjectWheel = (event: WheelEvent<HTMLElement>) => {
-    if (projects.length <= 1) {
-      return;
-    }
-
-    event.preventDefault();
-
-    if (event.deltaY === 0) {
-      return;
-    }
-
-    if (wheelQuietTimeoutRef.current !== null) {
-      window.clearTimeout(wheelQuietTimeoutRef.current);
-    }
-
-    wheelQuietTimeoutRef.current = window.setTimeout(() => {
-      wheelGestureActiveRef.current = false;
-      wheelQuietTimeoutRef.current = null;
-    }, projectWheelQuietDelay);
-
-    if (!wheelGestureActiveRef.current) {
-      wheelGestureActiveRef.current = true;
-      changeFocusedProject(event.deltaY > 0 ? 1 : -1);
-    }
-  };
-
   const handleProjectSwipe = (direction: 1 | -1) => {
     if (projects.length <= 1) {
       return;
@@ -230,7 +243,6 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
       className="fixed inset-x-0 bottom-0 top-[7.25rem] z-0 flex items-center overflow-hidden py-10 touch-pan-y"
       onTouchEnd={handleProjectTouchEnd}
       onTouchStart={handleProjectTouchStart}
-      onWheel={handleProjectWheel}
     >
       <motion.div
         ref={projectGridRef}
