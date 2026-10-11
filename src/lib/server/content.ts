@@ -44,13 +44,13 @@ export async function fetchPortfolioContent(serverSide = false): Promise<Portfol
     educationResult
   ] = await Promise.all([
     supabase.from("intro_content").select("*").limit(1).maybeSingle(),
-    supabase.from("skills").select("*").order("created_at", { ascending: false }),
-    supabase.from("projects").select("*").order("created_at", { ascending: true }),
-    supabase.from("experience").select("*").order("created_at", { ascending: false }),
-    supabase.from("certificates").select("*").order("created_at", { ascending: false }),
-    supabase.from("achievements").select("*").order("created_at", { ascending: false }),
-    supabase.from("activities").select("*").order("id", { ascending: true }),
-    supabase.from("education").select("*").order("created_at", { ascending: false })
+    supabase.from("skills").select("*").order("display_order", { ascending: true }),
+    supabase.from("projects").select("*").order("display_order", { ascending: true }),
+    supabase.from("experience").select("*").order("display_order", { ascending: true }),
+    supabase.from("certificates").select("*").order("display_order", { ascending: true }),
+    supabase.from("achievements").select("*").order("display_order", { ascending: true }),
+    supabase.from("activities").select("*").order("display_order", { ascending: true }),
+    supabase.from("education").select("*").order("display_order", { ascending: true })
   ]);
 
   return {

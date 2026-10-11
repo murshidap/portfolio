@@ -16,12 +16,14 @@ export interface IntroContent {
 
 export interface SkillItem {
   id: string;
+  display_order?: number;
   title: string;
   icon_url: string;
 }
 
 export interface ProjectItem {
   id: string;
+  display_order?: number;
   title: string;
   title_font?: string;
   subtitle: string;
@@ -34,6 +36,7 @@ export interface ProjectItem {
 
 export interface ExperienceItem {
   id: string;
+  display_order?: number;
   company: string;
   role: string;
   duration: string;
@@ -42,6 +45,7 @@ export interface ExperienceItem {
 
 export interface CertificateItem {
   id: string;
+  display_order?: number;
   title: string;
   issuer: string;
   year: string;
@@ -50,18 +54,21 @@ export interface CertificateItem {
 
 export interface AchievementItem {
   id: string;
+  display_order?: number;
   title: string;
   image_url: string;
 }
 
 export interface ActivityItem {
   id: string;
+  display_order?: number;
   title: string;
   image_url: string;
 }
 
 export interface EducationItem {
   id: string;
+  display_order?: number;
   institution: string;
   degree: string;
   duration: string;

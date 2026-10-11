@@ -240,7 +240,7 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
   return (
     <section
       ref={sectionRef}
-      className="fixed inset-x-0 bottom-0 top-[7.25rem] z-0 flex items-center overflow-hidden py-10 touch-pan-y"
+      className="fixed inset-x-0 bottom-0 top-[4.5rem] z-0 flex items-center overflow-hidden py-10 touch-pan-y md:top-[7.25rem]"
       onTouchEnd={handleProjectTouchEnd}
       onTouchStart={handleProjectTouchStart}
     >
@@ -285,8 +285,8 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
         })}
       </motion.div>
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1180px] items-center gap-6 px-3 md:grid-cols-[minmax(7rem,0.5fr)_minmax(0,1.5fr)] md:gap-3 md:px-8">
-        <div className="flex flex-col items-center gap-3">
+      <div className="relative z-10 mx-auto grid h-full w-full max-w-[1180px] items-center gap-6 px-3 md:grid-cols-[minmax(7rem,0.5fr)_minmax(0,1.5fr)] md:gap-3 md:px-8">
+        <div className="absolute inset-x-3 top-[7%] flex flex-col items-center gap-3 md:static">
           <div ref={projectSpotlightRef} className="pointer-events-none aspect-square w-[clamp(7rem,18vw,10rem)] rounded-md border border-zinc-950 ring-1 ring-zinc-950" />
           <nav aria-label="Project navigation" className="flex items-center gap-2">
             <button
@@ -317,7 +317,7 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
           <motion.div
             key={focusedProject.id}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            className="relative isolate text-center md:text-left"
+            className="absolute inset-x-3 top-[calc(7%+10.5rem)] isolate text-center md:static md:text-left"
             exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
             initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
             transition={{ duration: 0.42, ease: "easeOut" }}
@@ -327,7 +327,7 @@ export default function ProjectsPage({ projects }: { projects: ProjectItem[] }) 
               className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.8)_58%,transparent_100%)] blur-xl"
             />
             <h2
-              className="mt-2 text-[clamp(1.9rem,5vw,3.75rem)] leading-[0.88] text-zinc-950"
+              className="mt-2 text-[clamp(1.35rem,6vw,2rem)] leading-[0.92] text-zinc-950 md:text-[clamp(1.9rem,5vw,3.75rem)] md:leading-[0.88]"
               style={{ fontFamily: getProjectFontFamily(focusedProject.title_font) }}
             >
               {focusedProject.title}

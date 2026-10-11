@@ -24,7 +24,7 @@ export default function HomePage({ intro }: { intro: IntroContent }) {
       initial={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
     >
-      <ContactModal email={intro.email} onClose={() => setContactModalOpen(false)} open={contactModalOpen} />
+      <ContactModal onClose={() => setContactModalOpen(false)} open={contactModalOpen} />
 
       <section className="order-1 relative z-10 min-h-[420px] lg:absolute lg:inset-x-0 lg:top-[4.5rem] lg:min-h-0">
         <div className="pointer-events-none flex min-w-0 justify-center">

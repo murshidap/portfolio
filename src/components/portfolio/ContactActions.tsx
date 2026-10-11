@@ -39,7 +39,7 @@ function RequiredPlaceholder({ label, multiline = false }: { label: string; mult
   );
 }
 
-export function ContactModal({ email, onClose, open }: { email: string; onClose: () => void; open: boolean }) {
+export function ContactModal({ onClose, open }: { onClose: () => void; open: boolean }) {
   const [form, setForm] = useState({
     company: "",
     contactNumber: "",
@@ -47,6 +47,16 @@ export function ContactModal({ email, onClose, open }: { email: string; onClose:
     fullName: "",
     message: ""
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setSubmitted(false);
+      setSubmissionError("");
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -67,23 +77,28 @@ export function ContactModal({ email, onClose, open }: { email: string; onClose:
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setSubmitting(true);
+    setSubmissionError("");
 
-    const body = [
-      `Full Name: ${form.fullName}`,
-      `Email: ${form.email}`,
-      `Contact Number: ${form.contactNumber}`,
-      form.company ? `Company/Organization: ${form.company}` : "",
-      "",
-      "Message:",
-      form.message
-    ]
-      .filter((line) => line !== "")
-      .join("\n");
-
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent("Portfolio contact request")}&body=${encodeURIComponent(body)}`;
-    onClose();
+    try {
+      const response = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error ?? `Request failed (${response.status}).`);
+      }
+      setSubmitted(true);
+      setForm({ company: "", contactNumber: "", email: "", fullName: "", message: "" });
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : "Message could not be sent. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!open) {
@@ -107,7 +122,18 @@ export function ContactModal({ email, onClose, open }: { email: string; onClose:
           </button>
         </div>
 
-        <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
+        {submitted ? (
+          <p className="mt-7 rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700" role="status">
+            Thanks for reaching out. Your message has been sent.
+          </p>
+        ) : null}
+        {submissionError ? (
+          <p className="mt-7 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            {submissionError}
+          </p>
+        ) : null}
+
+        {!submitted ? <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
           <div className="relative">
             <Input aria-label="Full Name" id="contact-full-name" onChange={(event) => updateField("fullName", event.target.value)} required value={form.fullName} />
             {!form.fullName ? <RequiredPlaceholder label="Full Name" /> : null}
@@ -135,11 +161,11 @@ export function ContactModal({ email, onClose, open }: { email: string; onClose:
             <Button onClick={onClose} type="button" variant="secondary">
               Cancel
             </Button>
-            <Button className="border-zinc-950 bg-zinc-950 text-white hover:bg-black" type="submit">
-              Send Message
+            <Button className="border-zinc-950 bg-zinc-950 text-white hover:bg-black" disabled={submitting} type="submit">
+              {submitting ? "Sending..." : "Send Message"}
             </Button>
           </div>
-        </form>
+        </form> : null}
       </div>
     </div>
   );
@@ -156,7 +182,7 @@ export default function ContactActions({ intro }: { intro: IntroContent }) {
 
   return (
     <div className="flex w-full flex-col items-start gap-5 md:ml-auto md:w-auto md:flex-row md:items-center md:justify-end md:gap-5">
-      <ContactModal email={intro.email} onClose={() => setContactModalOpen(false)} open={contactModalOpen} />
+      <ContactModal onClose={() => setContactModalOpen(false)} open={contactModalOpen} />
       <div className="flex items-center justify-start gap-3 md:justify-end md:gap-5">
         {items.map((item) => (
           <a

@@ -12,7 +12,7 @@ function hasPersistedId(value: unknown) {
   return (typeof value === "string" && value.trim().length > 0) || (typeof value === "number" && Number.isFinite(value));
 }
 
-function ensureRowMetadata(row: Record<string, unknown>, table: string) {
+function ensureRowMetadata(row: Record<string, unknown>, table: string, index: number) {
   const normalizedRow = table === "projects" || table === "achievements"
     ? {
         ...row,
@@ -25,10 +25,11 @@ function ensureRowMetadata(row: Record<string, unknown>, table: string) {
         updated_at: typeof row.updated_at === "string" && row.updated_at.trim() ? row.updated_at : new Date().toISOString()
       }
     : row;
-  const rowWithId = hasPersistedId(normalizedRow.id)
-    ? normalizedRow
+  const rowWithDisplayOrder = { ...normalizedRow, display_order: index };
+  const rowWithId = hasPersistedId(rowWithDisplayOrder.id)
+    ? rowWithDisplayOrder
     : {
-        ...normalizedRow,
+        ...rowWithDisplayOrder,
         id: crypto.randomUUID()
       };
 
@@ -63,9 +64,9 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: "Invalid collection." }), { status: 400 });
   }
 
-  const normalizedRows = Array.isArray(rows) ? rows.filter(Boolean).map((row) => {
+  const normalizedRows = Array.isArray(rows) ? rows.filter(Boolean).map((row, index) => {
     if (row && typeof row === "object") {
-      return ensureRowMetadata(row as Record<string, unknown>, String(table));
+      return ensureRowMetadata(row as Record<string, unknown>, String(table), index);
     }
 
     return row;

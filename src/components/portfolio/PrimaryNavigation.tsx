@@ -51,7 +51,7 @@ export default function PrimaryNavigation({
         />
       ) : null}
 
-      <div className="relative z-[60] flex w-full items-center justify-between md:contents">
+      <div className="relative z-30 flex w-full items-center justify-between md:contents">
         <span className="font-open-sans-light text-base font-medium text-zinc-800 md:hidden">{activeViewLabel}</span>
         <button
           aria-controls="primary-navigation-panel"

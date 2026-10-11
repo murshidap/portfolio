@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import type { SkillItem } from "@/types/content";
@@ -162,6 +162,7 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
   const manualResumeTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const autoScrollIntervalRef = useRef<ReturnType<typeof window.setInterval> | null>(null);
   const manualScrollActiveRef = useRef(false);
+  const touchStartYRef = useRef<number | null>(null);
   const activeSkillIndex = skillItems.length > 0 ? wrapIndex(Math.round(activeSkillPosition), skillItems.length) : 0;
   const activeSkill = skillItems.length > 0 ? skillItems[activeSkillIndex] : null;
 
@@ -264,6 +265,31 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
     }, skillManualResumeDelay);
   }, [skillItems.length]);
 
+  const handleSkillTouchStart = (event: TouchEvent<HTMLElement>) => {
+    touchStartYRef.current = event.touches[0]?.clientY ?? null;
+  };
+
+  const handleSkillTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const startY = touchStartYRef.current;
+    const endY = event.changedTouches[0]?.clientY;
+    touchStartYRef.current = null;
+
+    if (skillItems.length <= 1 || startY === null || endY === undefined || Math.abs(endY - startY) < 48) {
+      return;
+    }
+
+    manualScrollActiveRef.current = true;
+    if (manualResumeTimeoutRef.current) {
+      window.clearTimeout(manualResumeTimeoutRef.current);
+    }
+
+    setActiveSkillPosition((currentPosition) => Math.round(currentPosition) + (endY < startY ? 1 : -1));
+    manualResumeTimeoutRef.current = window.setTimeout(() => {
+      manualScrollActiveRef.current = false;
+      manualResumeTimeoutRef.current = null;
+    }, skillManualResumeDelay);
+  };
+
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) {
@@ -296,7 +322,12 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
   });
 
   return (
-    <section ref={sectionRef} className="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center overflow-hidden py-8">
+    <section
+      ref={sectionRef}
+      className="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center overflow-hidden py-8"
+      onTouchEnd={handleSkillTouchEnd}
+      onTouchStart={handleSkillTouchStart}
+    >
       <div className="relative min-h-[430px] overflow-hidden sm:min-h-[500px]">
         <AnimatePresence initial={false}>
           {visibleSkillPlacements.map(({ key, placement, relativeOffset, skill }) => {

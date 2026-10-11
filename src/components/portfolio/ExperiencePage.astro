@@ -14,10 +14,10 @@ const { items } = Astro.props;
       <p class="text-sm text-zinc-600">No experience entries yet.</p>
     </section>
   ) : (
-    <section class="flex min-h-full w-full items-center overflow-x-auto overflow-y-hidden py-10">
-      <div class="flex w-max items-center gap-6 px-[max(1rem,calc((100vw-1180px)/2))] md:gap-8">
+    <section class="flex min-h-full w-full flex-col items-center overflow-x-hidden overflow-y-auto py-10 md:flex-row md:overflow-x-auto md:overflow-y-hidden">
+      <div class="flex w-full flex-col items-center gap-6 px-4 md:w-max md:flex-row md:gap-8 md:px-[max(1rem,calc((100vw-1180px)/2))]">
         {items.map((item) => (
-          <article class="flex h-[clamp(21rem,34vw,28rem)] w-[clamp(17rem,28vw,23rem)] shrink-0 flex-col justify-between overflow-hidden rounded-[1.5rem] border border-white/12 bg-black/[0.78] p-7 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-3xl md:p-8">
+          <article class="flex h-[18rem] w-[min(100%,32rem)] shrink-0 flex-col justify-between overflow-hidden rounded-[1.5rem] border border-white/12 bg-black/[0.78] p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-3xl md:h-[clamp(21rem,34vw,28rem)] md:w-[clamp(17rem,28vw,23rem)] md:p-8">
             <div>
               <h3 class="text-[clamp(1rem,1.8vw,1.65rem)] font-semibold uppercase leading-tight tracking-normal text-white">
                 {item.role}

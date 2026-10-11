@@ -1,11 +1,12 @@
 import { ArrowLeft, Check, ExternalLink, Eye, ImagePlus, LoaderCircle, LogOut, Minus, Pencil, Plus, Save, Trash2, Upload, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SortableCollection } from "@/components/admin/SortableCollection";
 import { defaultContent } from "@/data/defaultContent";
 import { getProjectFontFamily, projectFonts } from "@/data/projectFonts";
 import { cn } from "@/lib/utils";
@@ -17,9 +18,19 @@ import type {
   ProjectItem
 } from "@/types/content";
 
-type TabKey = "homepage" | "skills" | "projects" | "experience" | "certificates" | "about";
+type TabKey = "homepage" | "skills" | "projects" | "experience" | "certificates" | "about" | "enquiries";
 type AboutSection = "intro" | "education" | "achievements" | "activities";
 type CollectionKey = "skills" | "projects" | "experience" | "certificates" | "achievements" | "activities" | "education";
+
+interface Enquiry {
+  id: string;
+  full_name: string;
+  contact_number: string;
+  email: string;
+  company: string | null;
+  message: string;
+  created_at: string;
+}
 
 interface AdminAppProps {
   authenticated: boolean;
@@ -32,7 +43,8 @@ const tabs: Array<{ key: TabKey; label: string }> = [
   { key: "skills", label: "Skills" },
   { key: "projects", label: "Projects" },
   { key: "experience", label: "Experience" },
-  { key: "certificates", label: "Certificates" }
+  { key: "certificates", label: "Certificates" },
+  { key: "enquiries", label: "Enquiries" }
 ];
 
 const createId = () => crypto.randomUUID();
@@ -132,6 +144,11 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
   const [aboutSection, setAboutSection] = useState<AboutSection>("intro");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [enquiriesLoading, setEnquiriesLoading] = useState(false);
+  const [enquiriesError, setEnquiriesError] = useState("");
+  const [deletingEnquiryId, setDeletingEnquiryId] = useState<string | null>(null);
+  const [pendingDeleteAction, setPendingDeleteAction] = useState<(() => void) | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(authenticated);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -148,6 +165,41 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoggedIn || tab !== "enquiries") {
+      return;
+    }
+
+    let cancelled = false;
+    setEnquiriesLoading(true);
+    setEnquiriesError("");
+
+    void fetch("/api/admin/enquiries")
+      .then(parseResponse)
+      .then((payload: { enquiries?: Enquiry[] }) => {
+        if (!Array.isArray(payload.enquiries)) {
+          throw new Error("Enquiries response was invalid.");
+        }
+        if (!cancelled) {
+          setEnquiries(payload.enquiries);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setEnquiriesError(error instanceof Error ? error.message : "Enquiries could not be loaded.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setEnquiriesLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, tab]);
 
   const saveIntro = async () => {
     setSaving(true);
@@ -181,7 +233,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     }));
   };
 
-  const saveList = async (table: CollectionKey, rows: object[]) => {
+  const saveList = async (table: CollectionKey, rows: object[]): Promise<boolean> => {
     setSaving(true);
     setMessage("");
 
@@ -206,10 +258,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
         })
       );
       setMessage(`${table} updated.`);
+      return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Saving failed.");
+      return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const reorderCollection = async <K extends CollectionKey>(table: K, rows: PortfolioContent[K]) => {
+    const previousRows = content[table];
+    const orderedRows = rows.map((row, index) => ({ ...row, display_order: index }));
+    setContent((previous) => ({ ...previous, [table]: orderedRows }));
+
+    if (!(await saveList(table, orderedRows))) {
+      setContent((previous) => ({ ...previous, [table]: previousRows }));
     }
   };
 
@@ -278,6 +342,36 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Delete failed.");
     }
+  };
+
+  const deleteEnquiry = async (id: string) => {
+    setDeletingEnquiryId(id);
+    setMessage("");
+
+    try {
+      await parseResponse(
+        await fetch("/api/admin/enquiries", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id })
+        })
+      );
+      setEnquiries((current) => current.filter((enquiry) => enquiry.id !== id));
+      setMessage("Enquiry deleted.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Enquiry could not be deleted.");
+    } finally {
+      setDeletingEnquiryId(null);
+    }
+  };
+
+  const requestDeleteConfirmation = (action: () => void) => {
+    setPendingDeleteAction(() => action);
+  };
+
+  const confirmPendingDelete = () => {
+    pendingDeleteAction?.();
+    setPendingDeleteAction(null);
   };
 
   const handleLogin = async () => {
@@ -416,7 +510,8 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     skills: content.skills.length,
     projects: content.projects.length,
     experience: content.experience.length,
-    certificates: content.certificates.length
+    certificates: content.certificates.length,
+    enquiries: enquiries.length
   };
   const aboutSectionCounts: Partial<Record<AboutSection, number>> = {
     education: content.education.length,
@@ -425,6 +520,10 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
   };
   const activeTab = tabs.find((item) => item.key === tab) ?? tabs[0];
   const renderHeaderActions = () => {
+    if (tab === "enquiries") {
+      return null;
+    }
+
     if (tab === "homepage") {
       return (
         <Button className={primaryActionClass} onClick={saveIntro} type="button">
@@ -604,6 +703,46 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
         <div className="max-w-[1280px] px-8 py-7">
           <Card className="!border-0 !bg-transparent p-5 !shadow-none md:p-6">
+        {tab === "enquiries" && (
+          <div className="space-y-4">
+            {enquiriesLoading ? <p className="text-sm text-zinc-500">Loading enquiries...</p> : null}
+            {enquiriesError ? <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{enquiriesError}</p> : null}
+            {!enquiriesLoading && !enquiriesError && enquiries.length === 0 ? (
+              <p className="rounded-md border border-zinc-200 bg-white px-4 py-6 text-sm text-zinc-500">No enquiries have been submitted yet.</p>
+            ) : null}
+            {enquiries.map((enquiry) => (
+              <article className="rounded-md border border-zinc-200 bg-white p-5" key={enquiry.id}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold text-zinc-950">{enquiry.full_name}</h2>
+                    {enquiry.company ? <p className="mt-1 text-sm text-zinc-500">{enquiry.company}</p> : null}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <time className="text-sm text-zinc-500" dateTime={enquiry.created_at}>
+                      {new Date(enquiry.created_at).toLocaleString()}
+                    </time>
+                    <Button
+                      aria-label={`Delete enquiry from ${enquiry.full_name}`}
+                      className={destructiveActionClass}
+                      disabled={deletingEnquiryId === enquiry.id}
+                      onClick={() => requestDeleteConfirmation(() => void deleteEnquiry(enquiry.id))}
+                      type="button"
+                      variant="secondary"
+                    >
+                      {deletingEnquiryId === enquiry.id ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      {deletingEnquiryId === enquiry.id ? "Deleting..." : "Delete"}
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                  <a className="text-zinc-700 underline underline-offset-2" href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
+                  <a className="text-zinc-700 underline underline-offset-2" href={`tel:${enquiry.contact_number}`}>{enquiry.contact_number}</a>
+                </div>
+                <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{enquiry.message}</p>
+              </article>
+            ))}
+          </div>
+        )}
         {tab === "homepage" && (
           <div className="overflow-hidden rounded-md border border-zinc-200">
             <AdminFieldRow label="Profile Picture">
@@ -717,17 +856,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
         {tab === "skills" && (
           <div className="overflow-hidden rounded-md border border-zinc-200">
-            <div className="grid grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+            <div className="grid grid-cols-[48px_88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              <div className="px-2 py-3 text-center">Move</div>
               <div className="px-5 py-3">SI NO.</div>
               <div className="px-5 py-3 text-center">Icon</div>
               <div className="px-5 py-3">Skill</div>
               <div className="px-5 py-3 text-center">Delete</div>
             </div>
-            {content.skills.map((item, index) => (
-              <div
-                key={item.id}
-                className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
-              >
+            <SortableCollection
+              items={content.skills}
+              onReorder={(rows) => void reorderCollection("skills", rows)}
+              getItemLabel={(item) => item.title || "skill"}
+              rowClassName="grid min-h-14 grid-cols-[48px_88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
+            >
+              {(item, index, handle) => (
+                <>
+                <div className="flex items-center justify-center px-1 py-3">{handle}</div>
                 <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
                 <div className="flex items-center justify-center px-5 py-3">
                   <IconUploadButton
@@ -763,19 +907,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     aria-label={`Delete ${item.title || "skill"}`}
                     className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
                     onClick={() => {
-                      setContent((previous) => ({
-                        ...previous,
-                        skills: previous.skills.filter((entry) => entry.id !== item.id)
-                      }));
-                      void deleteRow("skills", item.id);
+                      requestDeleteConfirmation(() => {
+                        setContent((previous) => ({
+                          ...previous,
+                          skills: previous.skills.filter((entry) => entry.id !== item.id)
+                        }));
+                        void deleteRow("skills", item.id);
+                      });
                     }}
                     type="button"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              </div>
-            ))}
+                </>
+              )}
+            </SortableCollection>
           </div>
         )}
 
@@ -797,12 +944,14 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     }))
                   }
                   onDelete={() => {
-                    setEditingProjectId(null);
-                    setContent((previous) => ({
-                      ...previous,
-                      projects: previous.projects.filter((project) => project.id !== editingProject.id)
-                    }));
-                    void deleteRow("projects", editingProject.id);
+                    requestDeleteConfirmation(() => {
+                      setEditingProjectId(null);
+                      setContent((previous) => ({
+                        ...previous,
+                        projects: previous.projects.filter((project) => project.id !== editingProject.id)
+                      }));
+                      void deleteRow("projects", editingProject.id);
+                    });
                   }}
                 />
               );
@@ -811,12 +960,15 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             return (
               <ProjectsTable
                 items={content.projects}
+                onReorder={(rows) => void reorderCollection("projects", rows)}
                 onDelete={(item) => {
-                  setContent((previous) => ({
-                    ...previous,
-                    projects: previous.projects.filter((project) => project.id !== item.id)
-                  }));
-                  void deleteRow("projects", item.id);
+                  requestDeleteConfirmation(() => {
+                    setContent((previous) => ({
+                      ...previous,
+                      projects: previous.projects.filter((project) => project.id !== item.id)
+                    }));
+                    void deleteRow("projects", item.id);
+                  });
                 }}
                 onEdit={(item) => setEditingProjectId(item.id)}
               />
@@ -840,12 +992,14 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     }))
                   }
                   onDelete={() => {
-                    setEditingExperienceId(null);
-                    setContent((previous) => ({
-                      ...previous,
-                      experience: previous.experience.filter((entry) => entry.id !== editingExperience.id)
-                    }));
-                    void deleteRow("experience", editingExperience.id);
+                    requestDeleteConfirmation(() => {
+                      setEditingExperienceId(null);
+                      setContent((previous) => ({
+                        ...previous,
+                        experience: previous.experience.filter((entry) => entry.id !== editingExperience.id)
+                      }));
+                      void deleteRow("experience", editingExperience.id);
+                    });
                   }}
                 />
               );
@@ -854,12 +1008,15 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             return (
               <ExperienceTable
                 items={content.experience}
+                onReorder={(rows) => void reorderCollection("experience", rows)}
                 onDelete={(item) => {
-                  setContent((previous) => ({
-                    ...previous,
-                    experience: previous.experience.filter((entry) => entry.id !== item.id)
-                  }));
-                  void deleteRow("experience", item.id);
+                  requestDeleteConfirmation(() => {
+                    setContent((previous) => ({
+                      ...previous,
+                      experience: previous.experience.filter((entry) => entry.id !== item.id)
+                    }));
+                    void deleteRow("experience", item.id);
+                  });
                 }}
                 onEdit={(item) => setEditingExperienceId(item.id)}
               />
@@ -869,7 +1026,8 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
         {tab === "certificates" && (
           <div className="overflow-hidden rounded-md border border-zinc-200">
-            <div className="grid grid-cols-[88px_240px_minmax(0,1fr)_minmax(0,1fr)_120px_72px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+            <div className="grid grid-cols-[48px_88px_240px_minmax(0,1fr)_minmax(0,1fr)_120px_72px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              <div className="px-2 py-3 text-center">Move</div>
               <div className="whitespace-nowrap px-4 py-3 text-center">SI No.</div>
               <div className="px-4 py-3 text-center">Image</div>
               <div className="px-4 py-3">Title</div>
@@ -877,11 +1035,15 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
               <div className="px-4 py-3">Year</div>
               <div className="px-4 py-3 text-center">Delete</div>
             </div>
-            {content.certificates.map((item, index) => (
-              <div
-                key={item.id}
-                className="grid min-h-14 grid-cols-[88px_240px_minmax(0,1fr)_minmax(0,1fr)_120px_72px] border-b border-zinc-200 last:border-b-0"
-              >
+            <SortableCollection
+              items={content.certificates}
+              onReorder={(rows) => void reorderCollection("certificates", rows)}
+              getItemLabel={(item) => item.title || "certificate"}
+              rowClassName="grid min-h-14 grid-cols-[48px_88px_240px_minmax(0,1fr)_minmax(0,1fr)_120px_72px] border-b border-zinc-200 last:border-b-0"
+            >
+              {(item, index, handle) => (
+                <>
+                <div className="flex items-center justify-center px-1 py-3">{handle}</div>
                 <div className="flex items-center justify-center px-4 py-3 text-sm text-zinc-500">{index + 1}</div>
                 <div className="flex items-center justify-center px-4 py-3">
                   <IconUploadButton
@@ -945,19 +1107,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     aria-label={`Delete ${item.title || "certificate"}`}
                     className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
                     onClick={() => {
-                      setContent((previous) => ({
-                        ...previous,
-                        certificates: previous.certificates.filter((entry) => entry.id !== item.id)
-                      }));
-                      void deleteRow("certificates", item.id);
+                      requestDeleteConfirmation(() => {
+                        setContent((previous) => ({
+                          ...previous,
+                          certificates: previous.certificates.filter((entry) => entry.id !== item.id)
+                        }));
+                        void deleteRow("certificates", item.id);
+                      });
                     }}
                     type="button"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              </div>
-            ))}
+                </>
+              )}
+            </SortableCollection>
           </div>
         )}
 
@@ -979,17 +1144,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
         {tab === "about" && aboutSection === "education" && (
           <div className="overflow-x-auto rounded-md border border-zinc-200">
             <div className="min-w-[720px] overflow-hidden">
-              <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              <div className="grid grid-cols-[48px_minmax(0,1.1fr)_minmax(0,1.5fr)_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                <div className="px-2 py-3 text-center">Move</div>
                 <div className="px-5 py-3">Degree</div>
                 <div className="px-5 py-3">Institution</div>
                 <div className="px-5 py-3">Duration</div>
                 <div className="px-5 py-3 text-center">Delete</div>
               </div>
-              {content.education.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="grid min-h-14 grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
-                >
+              <SortableCollection
+                items={content.education}
+                onReorder={(rows) => void reorderCollection("education", rows)}
+                getItemLabel={(item) => item.degree || "education"}
+                rowClassName="grid min-h-14 grid-cols-[48px_minmax(0,1.1fr)_minmax(0,1.5fr)_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
+              >
+                {(item, _index, handle) => (
+                  <>
+                  <div className="flex items-center justify-center px-1 py-3">{handle}</div>
                   <div className="flex items-center px-5 py-3">
                     <Input
                       className={homepageValueInputClass}
@@ -1037,19 +1207,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                       aria-label={`Delete ${item.degree || "education"}`}
                       className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
                       onClick={() => {
-                        setContent((previous) => ({
-                          ...previous,
-                          education: previous.education.filter((entry) => entry.id !== item.id)
-                        }));
-                        void deleteRow("education", item.id);
+                        requestDeleteConfirmation(() => {
+                          setContent((previous) => ({
+                            ...previous,
+                            education: previous.education.filter((entry) => entry.id !== item.id)
+                          }));
+                          void deleteRow("education", item.id);
+                        });
                       }}
                       type="button"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                </div>
-              ))}
+                  </>
+                )}
+              </SortableCollection>
             </div>
           </div>
         )}
@@ -1057,17 +1230,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
         {tab === "about" && aboutSection === "achievements" && (
           <div className="overflow-x-auto rounded-md border border-zinc-200">
             <div className="min-w-[640px] overflow-hidden">
-              <div className="grid grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              <div className="grid grid-cols-[48px_88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                <div className="px-2 py-3 text-center">Move</div>
                 <div className="px-5 py-3">SI NO.</div>
                 <div className="px-5 py-3 text-center">Image</div>
                 <div className="px-5 py-3">Title</div>
                 <div className="px-5 py-3 text-center">Delete</div>
               </div>
-              {content.achievements.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
-                >
+              <SortableCollection
+                items={content.achievements}
+                onReorder={(rows) => void reorderCollection("achievements", rows)}
+                getItemLabel={(item) => item.title || "achievement"}
+                rowClassName="grid min-h-14 grid-cols-[48px_88px_120px_minmax(0,1fr)_88px] border-b border-zinc-200 last:border-b-0"
+              >
+                {(item, index, handle) => (
+                  <>
+                  <div className="flex items-center justify-center px-1 py-3">{handle}</div>
                   <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
                   <div className="flex items-center justify-center px-5 py-3">
                     <IconUploadButton
@@ -1103,19 +1281,22 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                       aria-label={`Delete ${item.title || "achievement"}`}
                       className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
                       onClick={() => {
-                        setContent((previous) => ({
-                          ...previous,
-                          achievements: previous.achievements.filter((entry) => entry.id !== item.id)
-                        }));
-                        void deleteRow("achievements", item.id);
+                        requestDeleteConfirmation(() => {
+                          setContent((previous) => ({
+                            ...previous,
+                            achievements: previous.achievements.filter((entry) => entry.id !== item.id)
+                          }));
+                          void deleteRow("achievements", item.id);
+                        });
                       }}
                       type="button"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                </div>
-              ))}
+                  </>
+                )}
+              </SortableCollection>
             </div>
           </div>
         )}
@@ -1138,11 +1319,54 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             );
           }
 
-          return <ActivitiesTable items={content.activities} onEdit={(item) => setEditingActivityId(item.id)} />;
+          return (
+            <ActivitiesTable
+              items={content.activities}
+              onEdit={(item) => setEditingActivityId(item.id)}
+              onReorder={(rows) => void reorderCollection("activities", rows)}
+            />
+          );
         })()}
           </Card>
         </div>
       </main>
+
+      {pendingDeleteAction ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6"
+          role="presentation"
+          onClick={() => setPendingDeleteAction(null)}
+        >
+          <section
+            aria-labelledby="confirm-delete-title"
+            aria-modal="true"
+            className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            role="alertdialog"
+          >
+            <h2 id="confirm-delete-title" className="text-lg font-semibold text-zinc-950">
+              Confirm deletion
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-600">
+              Are you sure you want to delete this item? This action can&apos;t be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                className={secondaryActionClass}
+                onClick={() => setPendingDeleteAction(null)}
+                type="button"
+                variant="secondary"
+              >
+                Cancel
+              </Button>
+              <Button className={redDestructiveActionClass} onClick={confirmPendingDelete} type="button">
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1151,27 +1375,40 @@ function CrudList({ children }: { children: ReactNode }) {
   return <div className="space-y-4">{children}</div>;
 }
 
-function ActivitiesTable({ items, onEdit }: { items: ActivityItem[]; onEdit: (item: ActivityItem) => void }) {
+function ActivitiesTable({
+  items,
+  onEdit,
+  onReorder
+}: {
+  items: ActivityItem[];
+  onEdit: (item: ActivityItem) => void;
+  onReorder: (items: ActivityItem[]) => void;
+}) {
   return (
     <div className="overflow-x-auto rounded-md border border-zinc-200">
-      <table className="w-full min-w-[560px] border-collapse text-left">
-        <thead className="bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-          <tr>
-            <th className="w-20 border-b border-zinc-200 px-4 py-3">No.</th>
-            <th className="w-24 border-b border-zinc-200 px-4 py-3">Image</th>
-            <th className="border-b border-zinc-200 px-4 py-3">Activity</th>
-            <th className="w-24 border-b border-zinc-200 px-4 py-3 text-center">Edit</th>
-          </tr>
-        </thead>
-        <tbody className="text-sm text-zinc-700">
-          {items.map((item, index) => (
-            <tr className="border-b border-zinc-200 last:border-b-0" key={item.id}>
-              <td className="px-4 py-3 text-zinc-500">{index + 1}</td>
-              <td className="px-4 py-3">
+      <div className="min-w-[560px]">
+        <div className="grid grid-cols-[48px_80px_96px_minmax(0,1fr)_96px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          <div className="px-2 py-3 text-center">Move</div>
+          <div className="px-4 py-3">No.</div>
+          <div className="px-4 py-3">Image</div>
+          <div className="px-4 py-3">Activity</div>
+          <div className="px-4 py-3 text-center">Edit</div>
+        </div>
+        <SortableCollection
+          items={items}
+          onReorder={onReorder}
+          getItemLabel={(item) => item.title || "activity"}
+          rowClassName="grid min-h-14 grid-cols-[48px_80px_96px_minmax(0,1fr)_96px] border-b border-zinc-200 last:border-b-0 text-sm text-zinc-700"
+        >
+          {(item, index, handle) => (
+            <>
+              <div className="flex items-center justify-center px-1 py-3">{handle}</div>
+              <div className="flex items-center px-4 py-3 text-zinc-500">{index + 1}</div>
+              <div className="flex items-center px-4 py-3">
                 {item.image_url ? <img alt="" className="h-10 w-10 rounded-md object-cover" src={item.image_url} /> : <ImagePlus className="h-5 w-5 text-zinc-400" />}
-              </td>
-              <td className="px-4 py-3 font-medium text-zinc-950">{item.title || `Activity ${index + 1}`}</td>
-              <td className="px-4 py-3 text-center">
+              </div>
+              <div className="flex items-center px-4 py-3 font-medium text-zinc-950">{item.title || `Activity ${index + 1}`}</div>
+              <div className="flex items-center justify-center px-4 py-3">
                 <Button
                   aria-label={`Edit ${item.title || `activity ${index + 1}`}`}
                   className="!h-8 !w-8 !rounded-md !p-0 !text-zinc-700"
@@ -1182,11 +1419,11 @@ function ActivitiesTable({ items, onEdit }: { items: ActivityItem[]; onEdit: (it
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </>
+          )}
+        </SortableCollection>
+      </div>
     </div>
   );
 }
@@ -1236,15 +1473,18 @@ function AdminFieldRow({ label, children }: { label: string; children: ReactNode
 function ProjectsTable({
   items,
   onEdit,
-  onDelete
+  onDelete,
+  onReorder
 }: {
   items: ProjectItem[];
   onEdit: (item: ProjectItem) => void;
   onDelete: (item: ProjectItem) => void;
+  onReorder: (items: ProjectItem[]) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-md border border-zinc-200">
-      <div className="grid grid-cols-[88px_120px_minmax(0,1.25fr)_minmax(0,1fr)_112px_104px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+      <div className="grid grid-cols-[48px_88px_120px_minmax(0,1.25fr)_minmax(0,1fr)_112px_104px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+        <div className="px-2 py-3 text-center">Move</div>
         <div className="px-5 py-3">SI NO.</div>
         <div className="px-5 py-3 text-center">Icon</div>
         <div className="px-5 py-3">Project</div>
@@ -1254,11 +1494,15 @@ function ProjectsTable({
       </div>
 
       {items.length ? (
-        items.map((item, index) => (
-          <div
-            className="grid min-h-14 grid-cols-[88px_120px_minmax(0,1.25fr)_minmax(0,1fr)_112px_104px] border-b border-zinc-200 last:border-b-0"
-            key={item.id}
-          >
+        <SortableCollection
+          items={items}
+          onReorder={onReorder}
+          getItemLabel={(item) => item.title || "project"}
+          rowClassName="grid min-h-14 grid-cols-[48px_88px_120px_minmax(0,1.25fr)_minmax(0,1fr)_112px_104px] border-b border-zinc-200 last:border-b-0"
+        >
+          {(item, index, handle) => (
+            <>
+            <div className="flex items-center justify-center px-1 py-3">{handle}</div>
             <div className="flex items-center px-5 py-3 text-sm text-zinc-500">{index + 1}</div>
             <div className="flex items-center justify-center px-5 py-3">
               <div aria-label={item.image_url ? `${item.title || "Project"} cover image` : "No cover image"} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md text-zinc-400" title="Edit cover image from the project editor">
@@ -1303,8 +1547,9 @@ function ProjectsTable({
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
-          </div>
-        ))
+            </>
+          )}
+        </SortableCollection>
       ) : (
         <div className="px-4 py-8 text-center text-sm text-zinc-500">No projects added.</div>
       )}
@@ -1589,32 +1834,39 @@ function ProjectImageUploadButton({
 function ExperienceTable({
   items,
   onEdit,
-  onDelete
+  onDelete,
+  onReorder
 }: {
   items: ExperienceItem[];
   onEdit: (item: ExperienceItem) => void;
   onDelete: (item: ExperienceItem) => void;
+  onReorder: (items: ExperienceItem[]) => void;
 }) {
   return (
     <div className="overflow-x-auto rounded-md border border-zinc-200">
-      <table className="w-full min-w-[680px] border-collapse text-left">
-        <thead className="bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-          <tr>
-            <th className="border-b border-zinc-200 px-4 py-3">Role</th>
-            <th className="border-b border-zinc-200 px-4 py-3">Company</th>
-            <th className="border-b border-zinc-200 px-4 py-3">Duration</th>
-            <th className="w-24 border-b border-zinc-200 px-4 py-3 text-center">Edit</th>
-            <th className="w-24 border-b border-zinc-200 px-4 py-3 text-center">Delete</th>
-          </tr>
-        </thead>
-        <tbody className="text-sm text-zinc-700">
-          {items.length ? (
-            items.map((item) => (
-              <tr className="border-b border-zinc-200 last:border-b-0" key={item.id}>
-                <td className="max-w-[240px] px-4 py-4 font-medium text-zinc-950">{item.role || "Untitled role"}</td>
-                <td className="max-w-[240px] px-4 py-4">{item.company || "No company"}</td>
-                <td className="max-w-[200px] px-4 py-4">{item.duration || "No duration"}</td>
-                <td className="px-4 py-4 text-center">
+      <div className="min-w-[680px]">
+        <div className="grid grid-cols-[48px_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_96px_96px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          <div className="px-2 py-3 text-center">Move</div>
+          <div className="px-4 py-3">Role</div>
+          <div className="px-4 py-3">Company</div>
+          <div className="px-4 py-3">Duration</div>
+          <div className="px-4 py-3 text-center">Edit</div>
+          <div className="px-4 py-3 text-center">Delete</div>
+        </div>
+        {items.length ? (
+          <SortableCollection
+            items={items}
+            onReorder={onReorder}
+            getItemLabel={(item) => item.role || "experience"}
+            rowClassName="grid grid-cols-[48px_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,1fr)_96px_96px] border-b border-zinc-200 last:border-b-0 text-sm text-zinc-700"
+          >
+            {(item, _index, handle) => (
+              <>
+                <div className="flex items-center justify-center px-1 py-3">{handle}</div>
+                <div className="max-w-[240px] px-4 py-4 font-medium text-zinc-950">{item.role || "Untitled role"}</div>
+                <div className="max-w-[240px] px-4 py-4">{item.company || "No company"}</div>
+                <div className="max-w-[200px] px-4 py-4">{item.duration || "No duration"}</div>
+                <div className="px-4 py-4 text-center">
                   <Button
                     aria-label={`Edit ${item.role || "experience"}`}
                     className="!h-8 !w-8 !rounded-md !p-0 !text-zinc-700"
@@ -1625,8 +1877,8 @@ function ExperienceTable({
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                </td>
-                <td className="px-4 py-4 text-center">
+                </div>
+                <div className="px-4 py-4 text-center">
                   <Button
                     aria-label={`Delete ${item.role || "experience"}`}
                     className="!h-8 !w-8 !rounded-md !border-red-200 !p-0 !text-red-600 hover:!border-red-600 hover:!bg-red-50"
@@ -1637,18 +1889,14 @@ function ExperienceTable({
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td className="px-4 py-8 text-center text-sm text-zinc-500" colSpan={5}>
-                No experience entries yet.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                </div>
+              </>
+            )}
+          </SortableCollection>
+        ) : (
+          <p className="px-4 py-8 text-center text-sm text-zinc-500">No experience entries yet.</p>
+        )}
+      </div>
     </div>
   );
 }
