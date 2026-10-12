@@ -13,18 +13,16 @@ function hasPersistedId(value: unknown) {
 }
 
 function ensureRowMetadata(row: Record<string, unknown>, table: string, index: number) {
-  const normalizedRow = table === "projects" || table === "achievements"
-    ? {
-        ...row,
-        ...(table === "projects"
-          ? {
-              subtitle: row.subtitle ?? "",
-              title_font: typeof row.title_font === "string" && row.title_font.trim() ? row.title_font : "rostex"
-            }
-          : {}),
-        updated_at: typeof row.updated_at === "string" && row.updated_at.trim() ? row.updated_at : new Date().toISOString()
-      }
-    : row;
+  const normalizedRow = {
+    ...row,
+    ...(table === "projects"
+      ? {
+          subtitle: row.subtitle ?? "",
+          title_font: typeof row.title_font === "string" && row.title_font.trim() ? row.title_font : "rostex"
+        }
+      : {}),
+    updated_at: typeof row.updated_at === "string" && row.updated_at.trim() ? row.updated_at : new Date().toISOString()
+  };
   const rowWithDisplayOrder = { ...normalizedRow, display_order: index };
   const rowWithId = hasPersistedId(rowWithDisplayOrder.id)
     ? rowWithDisplayOrder
