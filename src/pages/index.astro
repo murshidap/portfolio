@@ -1,11 +1,83 @@
 ---
+import AboutPage from "@/components/portfolio/AboutPage.astro";
+import AchievementCoverFlow from "@/components/portfolio/AchievementCoverFlow";
+import CertificatesPage from "@/components/portfolio/CertificatesPage.astro";
+import ExperiencePage from "@/components/portfolio/ExperiencePage.astro";
 import HomePage from "@/components/portfolio/HomePage";
+import ProjectsPage from "@/components/portfolio/ProjectsPage";
 import PortfolioShell from "@/components/portfolio/PortfolioShell.astro";
 import { fetchPortfolioContent } from "@/lib/server/content";
 
 const initialContent = await fetchPortfolioContent();
 ---
 
-<PortfolioShell activeView="home" intro={initialContent.intro} title="Web Developer">
-  <HomePage client:load intro={initialContent.intro} />
+<PortfolioShell activeView="home" intro={initialContent.intro} removeBottomPadding title="Web Developer">
+  <section class="stacking-section z-[1] scroll-mt-24" data-scroll-reveal="visible" id="home">
+    <HomePage client:load intro={initialContent.intro} skills={initialContent.skills} />
+  </section>
+
+  <AboutPage intro={initialContent.intro} />
+
+  <section class="scroll-driven-section relative z-[3] w-full scroll-mt-[3.75rem] bg-zinc-950 text-white md:scroll-mt-[4.25rem]" id="experience">
+    <ExperiencePage items={initialContent.experience} />
+  </section>
+
+  <section class="relative z-[4] w-full scroll-mt-24 bg-white text-zinc-950" id="projects">
+    <ProjectsPage client:visible={{ rootMargin: "200px" }} projects={initialContent.projects} />
+  </section>
+
+  <section class="relative z-[5] w-full bg-black" id="gallery">
+    <AchievementCoverFlow client:load items={initialContent.achievements} />
+  </section>
+
+  <section class="relative z-[6] w-full bg-white" id="certificates">
+    <CertificatesPage items={initialContent.certificates} />
+  </section>
+
 </PortfolioShell>
+
+<style>
+  .stacking-section {
+    position: sticky;
+    top: 0;
+    min-height: 100svh;
+    background: #fff;
+  }
+
+  .scroll-driven-section {
+    background: #fff;
+  }
+
+  #experience {
+    background: #09090b;
+  }
+
+  #experience[data-enhanced] + #projects {
+    margin-top: calc(-1 * var(--experience-stack-distance, 100svh));
+  }
+
+  #certificates {
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 6;
+  }
+
+  #certificates[data-gallery-stack] {
+    margin-top: calc(-1 * var(--gallery-stack-distance));
+  }
+
+  #gallery {
+    background: #000;
+    position: relative;
+    z-index: 5;
+  }
+
+  #gallery[data-enhanced] {
+    margin-top: calc(-1 * var(--gallery-stack-distance));
+  }
+
+  #home {
+    min-height: calc(100svh - 6rem);
+  }
+</style>

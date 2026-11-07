@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { isValidProjectCardColor, normalizeProjectCardColor } from "@/data/projectColors";
 
 import {
   forbiddenResponse,
@@ -7,28 +8,27 @@ import {
   isSameOriginAdminRequest
 } from "@/lib/server/auth";
 
-const allowedTables = new Set(["skills", "projects", "experience", "certificates", "achievements", "activities", "education"]);
+const allowedTables = new Set(["skills", "projects", "experience", "certificates", "achievements", "education"]);
 function hasPersistedId(value: unknown) {
   return (typeof value === "string" && value.trim().length > 0) || (typeof value === "number" && Number.isFinite(value));
 }
 
 function ensureRowMetadata(row: Record<string, unknown>, table: string, index: number) {
   const { updated_at: existingUpdatedAt, ...rowWithoutUpdatedAt } = row;
+  const rowWithoutExperienceDescription = table === "experience"
+    ? Object.fromEntries(Object.entries(rowWithoutUpdatedAt).filter(([key]) => key !== "description"))
+    : rowWithoutUpdatedAt;
   const normalizedRow = {
-    ...(table === "activities" ? rowWithoutUpdatedAt : row),
+    ...(table === "experience" ? rowWithoutExperienceDescription : row),
     ...(table === "projects"
       ? {
           subtitle: row.subtitle ?? "",
-          title_font: typeof row.title_font === "string" && row.title_font.trim() ? row.title_font : "rostex"
+          card_color: normalizeProjectCardColor(row.card_color)
         }
       : {}),
-    ...(table !== "activities"
-      ? {
-          updated_at: typeof existingUpdatedAt === "string" && existingUpdatedAt.trim()
-            ? existingUpdatedAt
-            : new Date().toISOString()
-        }
-      : {})
+    updated_at: typeof existingUpdatedAt === "string" && existingUpdatedAt.trim()
+      ? existingUpdatedAt
+      : new Date().toISOString()
   };
   const rowWithDisplayOrder = { ...normalizedRow, display_order: index };
   const rowWithId = hasPersistedId(rowWithDisplayOrder.id)
@@ -67,6 +67,34 @@ export const POST: APIRoute = async ({ request }) => {
   const { table, rows } = await request.json();
   if (!allowedTables.has(String(table))) {
     return new Response(JSON.stringify({ error: "Invalid collection." }), { status: 400 });
+  }
+
+  if (
+    table === "certificates" &&
+    Array.isArray(rows) &&
+    rows.some((row) =>
+      row &&
+      typeof row === "object" &&
+      "asset_url" in row &&
+      row.asset_url !== null &&
+      row.asset_url !== "" &&
+      (typeof row.asset_url !== "string" || !/\.(?:avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i.test(row.asset_url.trim()))
+    )
+  ) {
+    return new Response(JSON.stringify({ error: "Certificate files must be image URLs." }), { status: 400 });
+  }
+
+  if (
+    table === "projects" &&
+    Array.isArray(rows) &&
+    rows.some((row) =>
+      row &&
+      typeof row === "object" &&
+      "card_color" in row &&
+      !isValidProjectCardColor(row.card_color)
+    )
+  ) {
+    return new Response(JSON.stringify({ error: "Project card colors must be six-digit hex values." }), { status: 400 });
   }
 
   const normalizedRows = Array.isArray(rows) ? rows.filter(Boolean).map((row, index) => {

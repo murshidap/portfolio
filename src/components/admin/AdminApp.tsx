@@ -8,19 +8,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SortableCollection } from "@/components/admin/SortableCollection";
 import { defaultContent } from "@/data/defaultContent";
-import { getProjectFontFamily, projectFonts } from "@/data/projectFonts";
+import { DEFAULT_PROJECT_CARD_COLOR, normalizeProjectCardColor } from "@/data/projectColors";
 import { cn } from "@/lib/utils";
 import type {
   AchievementItem,
-  ActivityItem,
   ExperienceItem,
   PortfolioContent,
   ProjectItem
 } from "@/types/content";
 
 type TabKey = "homepage" | "skills" | "projects" | "experience" | "certificates" | "about" | "enquiries";
-type AboutSection = "intro" | "education" | "achievements" | "activities";
-type CollectionKey = "skills" | "projects" | "experience" | "certificates" | "achievements" | "activities" | "education";
+type AboutSection = "intro" | "education" | "achievements";
+type CollectionKey = "skills" | "projects" | "experience" | "certificates" | "achievements" | "education";
 
 interface Enquiry {
   id: string;
@@ -48,7 +47,6 @@ const tabs: Array<{ key: TabKey; label: string }> = [
 ];
 
 const createId = () => crypto.randomUUID();
-const activityCardCount = 8;
 
 function normalizePersistedId(value: unknown) {
   if (typeof value === "string" && value.trim()) {
@@ -62,28 +60,8 @@ function normalizePersistedId(value: unknown) {
   return createId();
 }
 
-function normalizeActivityId(value: unknown) {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
-    ? value
-    : createId();
-}
-
 function appendUniqueUrl(urls: string[] | undefined, url: string) {
   return Array.from(new Set([...(urls ?? []), url].map((item) => item.trim()).filter(Boolean)));
-}
-
-function normalizeActivitySlots(items: ActivityItem[] | undefined) {
-  const sourceItems = items ?? defaultContent.activities;
-
-  return Array.from({ length: activityCardCount }, (_, index) => {
-    const item = sourceItems[index] ?? defaultContent.activities[index];
-
-    return {
-      id: normalizeActivityId(item?.id),
-      title: item?.title || `Activity ${index + 1}`,
-      image_url: item?.image_url || ""
-    };
-  });
 }
 
 function isSquareImage(file: File) {
@@ -118,8 +96,6 @@ const homepageValueInputClass =
   "!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !shadow-none focus:!border-0 focus:!ring-0";
 const projectAdditionalImageMaxCount = 4;
 const projectDescriptionMaxLength = 300;
-const experienceDescriptionMaxLength = 220;
-const activityTitleMaxLength = 60;
 const fixedOwnerName = "MURSHIDA P.";
 const roleScaleMin = 60;
 const roleScaleMax = 150;
@@ -152,19 +128,10 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(authenticated);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [content, setContent] = useState<PortfolioContent>(() => {
-    const startingContent = initialContent ?? defaultContent;
-
-    return {
-      ...startingContent,
-      achievements: startingContent.achievements,
-      activities: normalizeActivitySlots(startingContent.activities)
-    };
-  });
+  const [content, setContent] = useState<PortfolioContent>(() => initialContent ?? defaultContent);
   const roleScalePercent = normalizeRoleScalePercent(content.intro.role_scale_percent);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
-  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn || tab !== "enquiries") {
@@ -306,19 +273,6 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ table: "education", rows: content.education })
           })
-        ),
-        parseResponse(
-          await fetch("/api/admin/collection", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              table: "activities",
-              rows: content.activities.map((entry) => ({
-                ...entry,
-                title: entry.title.slice(0, activityTitleMaxLength)
-              }))
-            })
-          })
         )
       ]);
       setMessage("About content updated.");
@@ -403,7 +357,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
     const newProject: ProjectItem = {
       id: createId(),
       title: "",
-      title_font: "rostex",
+      card_color: DEFAULT_PROJECT_CARD_COLOR,
       subtitle: "",
       description: "",
       stack: [],
@@ -430,8 +384,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
       id: createId(),
       company: "",
       role: "",
-      duration: "",
-      description: ""
+      duration: ""
     };
 
     setContent((previous) => ({
@@ -459,14 +412,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
       education: [{ id: createId(), institution: "", degree: "", duration: "", description: "" }, ...previous.education]
     }));
 
-  const saveExperience = () =>
-    saveList(
-      "experience",
-      content.experience.map((entry) => ({
-        ...entry,
-        description: entry.description.slice(0, experienceDescriptionMaxLength)
-      }))
-    );
+  const saveExperience = () => saveList("experience", content.experience);
 
   const saveProjects = () =>
     saveList(
@@ -515,8 +461,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
   };
   const aboutSectionCounts: Partial<Record<AboutSection, number>> = {
     education: content.education.length,
-    achievements: content.achievements.length,
-    activities: content.activities.length
+    achievements: content.achievements.length
   };
   const activeTab = tabs.find((item) => item.key === tab) ?? tabs[0];
   const renderHeaderActions = () => {
@@ -578,14 +523,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
         );
       }
 
-      return (
-        <div className="flex shrink-0 flex-wrap justify-end gap-3">
-          <Button className={primaryActionClass} onClick={saveAchievementsPanel} type="button">
-            <Save className="h-4 w-4" />
-            Save Activities
-          </Button>
-        </div>
-      );
+      return null;
     }
 
     const actions: Record<CollectionKey, { addLabel: string; onAdd: () => void; onSave: () => void }> = {
@@ -594,7 +532,6 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
       experience: { addLabel: "Add Experience", onAdd: addExperience, onSave: saveExperience },
       certificates: { addLabel: "Add Certificate", onAdd: addCertificate, onSave: () => saveList("certificates", content.certificates) },
       achievements: { addLabel: "Add Achievement", onAdd: addAchievement, onSave: saveAchievementsPanel },
-      activities: { addLabel: "Add Activity", onAdd: () => undefined, onSave: saveAchievementsPanel },
       education: { addLabel: "Add Education", onAdd: addEducation, onSave: () => saveList("education", content.education) }
     };
     const activeActions = actions[tab as CollectionKey];
@@ -642,7 +579,7 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
                     </button>
                     {active ? (
                       <div className="ml-3 mt-1 space-y-1 border-l border-zinc-200 pl-3">
-                        {(["intro", "education", "achievements", "activities"] as const).map((section) => (
+                        {(["intro", "education", "achievements"] as const).map((section) => (
                           <button
                             className={cn(
                               "flex h-9 w-full items-center justify-between rounded-md px-3 text-left text-sm transition",
@@ -1301,32 +1238,6 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
           </div>
         )}
 
-        {tab === "about" && aboutSection === "activities" && (() => {
-          const editingActivity = content.activities.find((activity) => activity.id === editingActivityId);
-
-          if (editingActivity) {
-            return (
-              <ActivityEditor
-                item={editingActivity}
-                onBack={() => setEditingActivityId(null)}
-                onChange={(next) =>
-                  setContent((previous) => ({
-                    ...previous,
-                    activities: previous.activities.map((activity) => (activity.id === next.id ? next : activity))
-                  }))
-                }
-              />
-            );
-          }
-
-          return (
-            <ActivitiesTable
-              items={content.activities}
-              onEdit={(item) => setEditingActivityId(item.id)}
-              onReorder={(rows) => void reorderCollection("activities", rows)}
-            />
-          );
-        })()}
           </Card>
         </div>
       </main>
@@ -1373,90 +1284,6 @@ export function AdminApp({ authenticated, initialContent }: AdminAppProps) {
 
 function CrudList({ children }: { children: ReactNode }) {
   return <div className="space-y-4">{children}</div>;
-}
-
-function ActivitiesTable({
-  items,
-  onEdit,
-  onReorder
-}: {
-  items: ActivityItem[];
-  onEdit: (item: ActivityItem) => void;
-  onReorder: (items: ActivityItem[]) => void;
-}) {
-  return (
-    <div className="overflow-x-auto rounded-md border border-zinc-200">
-      <div className="min-w-[560px]">
-        <div className="grid grid-cols-[48px_80px_96px_minmax(0,1fr)_96px] border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-          <div className="px-2 py-3 text-center">Move</div>
-          <div className="px-4 py-3">No.</div>
-          <div className="px-4 py-3">Image</div>
-          <div className="px-4 py-3">Activity</div>
-          <div className="px-4 py-3 text-center">Edit</div>
-        </div>
-        <SortableCollection
-          items={items}
-          onReorder={onReorder}
-          getItemLabel={(item) => item.title || "activity"}
-          rowClassName="grid min-h-14 grid-cols-[48px_80px_96px_minmax(0,1fr)_96px] border-b border-zinc-200 last:border-b-0 text-sm text-zinc-700"
-        >
-          {(item, index, handle) => (
-            <>
-              <div className="flex items-center justify-center px-1 py-3">{handle}</div>
-              <div className="flex items-center px-4 py-3 text-zinc-500">{index + 1}</div>
-              <div className="flex items-center px-4 py-3">
-                {item.image_url ? <img alt="" className="h-10 w-10 rounded-md object-cover" src={item.image_url} /> : <ImagePlus className="h-5 w-5 text-zinc-400" />}
-              </div>
-              <div className="flex items-center px-4 py-3 font-medium text-zinc-950">{item.title || `Activity ${index + 1}`}</div>
-              <div className="flex items-center justify-center px-4 py-3">
-                <Button
-                  aria-label={`Edit ${item.title || `activity ${index + 1}`}`}
-                  className="!h-8 !w-8 !rounded-md !p-0 !text-zinc-700"
-                  onClick={() => onEdit(item)}
-                  title="Edit activity"
-                  type="button"
-                  variant="secondary"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </>
-          )}
-        </SortableCollection>
-      </div>
-    </div>
-  );
-}
-
-function ActivityEditor({ item, onChange, onBack }: { item: ActivityItem; onChange: (next: ActivityItem) => void; onBack: () => void }) {
-  return (
-    <div className="space-y-5">
-      <Button className={secondaryActionClass} onClick={onBack} type="button" variant="secondary">
-        <ArrowLeft className="h-4 w-4" />
-        Activities
-      </Button>
-      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_180px]">
-        <div>
-          <Label htmlFor="activity-title">Activity title</Label>
-          <Input
-            id="activity-title"
-            maxLength={activityTitleMaxLength}
-            value={item.title}
-            onChange={(event) => onChange({ ...item, title: event.target.value.slice(0, activityTitleMaxLength) })}
-          />
-        </div>
-        <div>
-          <Label>Activity image</Label>
-          <IconUploadButton
-            accept=".jpeg,.jpg,.png,.webp,.gif"
-            assetFolder="activities"
-            currentUrl={item.image_url}
-            onUploaded={(url) => onChange({ ...item, image_url: url })}
-          />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function AdminFieldRow({ label, children }: { label: string; children: ReactNode }) {
@@ -1569,8 +1396,19 @@ function ProjectEditor({
   onDelete: () => void;
 }) {
   const [newTech, setNewTech] = useState("");
+  const [cardColorCode, setCardColorCode] = useState(normalizeProjectCardColor(item.card_color).slice(1));
   const screenshotUrls = (item.screenshot_urls ?? []).slice(0, projectAdditionalImageMaxCount);
   const canUploadMoreImages = screenshotUrls.length < projectAdditionalImageMaxCount;
+
+  useEffect(() => {
+    setCardColorCode(normalizeProjectCardColor(item.card_color).slice(1));
+  }, [item.card_color]);
+
+  const updateCardColor = (color: string) => {
+    const normalizedColor = normalizeProjectCardColor(color);
+    setCardColorCode(normalizedColor.slice(1));
+    onChange({ ...item, card_color: normalizedColor });
+  };
 
   const addTech = () => {
     const nextTech = newTech.trim();
@@ -1602,24 +1440,39 @@ function ProjectEditor({
           aria-label="Project title"
           className="!h-auto !rounded-none !border-0 !bg-transparent !px-0 !py-0 !text-3xl !font-medium !shadow-none focus:!border-0 focus:!ring-0"
           placeholder="Project title"
-          style={{ fontFamily: getProjectFontFamily(item.title_font) }}
           value={item.title}
           onChange={(event) => onChange({ ...item, title: event.target.value })}
         />
         <div className="grid max-w-sm gap-2">
-          <Label htmlFor="project-title-font">Project title font</Label>
-          <select
-            className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-400"
-            id="project-title-font"
-            onChange={(event) => onChange({ ...item, title_font: event.target.value })}
-            value={projectFonts.some((font) => font.id === item.title_font) ? item.title_font : projectFonts[0].id}
-          >
-            {projectFonts.map((font) => (
-              <option key={font.id} value={font.id}>
-                {font.label}
-              </option>
-            ))}
-          </select>
+          <Label htmlFor="project-card-color-code">Project card color</Label>
+          <div className="flex items-center gap-3">
+            <Input
+              aria-label="Choose project card color"
+              className="h-10 w-14 cursor-pointer p-1"
+              onChange={(event) => updateCardColor(event.target.value)}
+              type="color"
+              value={normalizeProjectCardColor(item.card_color)}
+            />
+            <Input
+              aria-label="Project card color hex code"
+              autoComplete="off"
+              className="max-w-32 font-mono uppercase"
+              id="project-card-color-code"
+              inputMode="text"
+              maxLength={6}
+              onBlur={() => setCardColorCode(normalizeProjectCardColor(item.card_color).slice(1))}
+              onChange={(event) => {
+                const nextCode = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6);
+                setCardColorCode(nextCode);
+                if (/^[0-9a-f]{6}$/i.test(nextCode)) {
+                  onChange({ ...item, card_color: `#${nextCode.toUpperCase()}` });
+                }
+              }}
+              pattern="[0-9A-Fa-f]{6}"
+              placeholder="0C0C0C"
+              value={cardColorCode}
+            />
+          </div>
         </div>
         <Input
           aria-label="Project website"
@@ -1648,13 +1501,15 @@ function ProjectEditor({
         <p className="mt-2 text-xs text-zinc-500">{projectDescriptionMaxLength - item.description.slice(0, projectDescriptionMaxLength).length} characters remaining</p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[180px_minmax(0,1fr)]">
-        <ProjectImageTile
-          currentUrl={item.image_url}
-          label="Cover image"
-          onRemove={() => onChange({ ...item, image_url: "" })}
-          onUploaded={(url) => onChange({ ...item, image_url: url })}
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[140px_minmax(0,1fr)]">
+        <div className="w-full max-w-[140px]">
+          <ProjectImageTile
+            currentUrl={item.image_url}
+            label="Cover image"
+            onRemove={() => onChange({ ...item, image_url: "" })}
+            onUploaded={(url) => onChange({ ...item, image_url: url })}
+          />
+        </div>
 
         <div>
           <div className="mb-2 flex items-center justify-between gap-3">
@@ -1912,8 +1767,6 @@ function ExperienceEditor({
   onBack: () => void;
   onDelete: () => void;
 }) {
-  const visibleDescription = item.description.slice(0, experienceDescriptionMaxLength);
-
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
@@ -1941,18 +1794,6 @@ function ExperienceEditor({
             <Input id="experience-duration" value={item.duration} onChange={(event) => onChange({ ...item, duration: event.target.value })} />
           </div>
         </div>
-        <div>
-          <div className="mb-1 flex items-center justify-between gap-3">
-            <Label htmlFor="experience-description">Description</Label>
-            <span className="text-xs text-zinc-500">{visibleDescription.length}/{experienceDescriptionMaxLength}</span>
-          </div>
-          <Textarea
-            id="experience-description"
-            maxLength={experienceDescriptionMaxLength}
-            value={visibleDescription}
-            onChange={(event) => onChange({ ...item, description: event.target.value.slice(0, experienceDescriptionMaxLength) })}
-          />
-        </div>
       </div>
     </div>
   );
@@ -1979,7 +1820,11 @@ function IconUploadButton({
           "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-black",
           currentUrl ? "text-zinc-950" : ""
         )}
-        title={currentUrl ? "Replace icon image" : "Upload icon image"}
+        title={
+          assetFolder === "certificates"
+            ? currentUrl ? "Replace certificate image" : "Upload certificate image"
+            : currentUrl ? "Replace icon image" : "Upload icon image"
+        }
       >
         {uploading ? (
           <LoaderCircle className="h-4 w-4 animate-spin" />

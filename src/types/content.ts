@@ -25,7 +25,7 @@ export interface ProjectItem {
   id: string;
   display_order?: number;
   title: string;
-  title_font?: string;
+  card_color?: string;
   subtitle: string;
   description: string;
   stack: string[];
@@ -40,7 +40,6 @@ export interface ExperienceItem {
   company: string;
   role: string;
   duration: string;
-  description: string;
 }
 
 export interface CertificateItem {
@@ -53,13 +52,6 @@ export interface CertificateItem {
 }
 
 export interface AchievementItem {
-  id: string;
-  display_order?: number;
-  title: string;
-  image_url: string;
-}
-
-export interface ActivityItem {
   id: string;
   display_order?: number;
   title: string;
@@ -82,6 +74,5 @@ export interface PortfolioContent {
   experience: ExperienceItem[];
   certificates: CertificateItem[];
   achievements: AchievementItem[];
-  activities: ActivityItem[];
   education: EducationItem[];
 }

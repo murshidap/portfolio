@@ -25,6 +25,7 @@ export const defaultContent: PortfolioContent = {
     {
       id: "project-1",
       title: "Portfolio System",
+      card_color: "#0C0C0C",
       subtitle: "",
       description:
         "A responsive portfolio platform with admin-driven content, glowing visuals, and premium motion.",
@@ -36,6 +37,7 @@ export const defaultContent: PortfolioContent = {
     {
       id: "project-2",
       title: "Design Clone",
+      card_color: "#0C0C0C",
       subtitle: "",
       description:
         "A polished landing experience recreated with careful spacing, gradients, and glassmorphism.",
@@ -50,8 +52,7 @@ export const defaultContent: PortfolioContent = {
       id: "exp-1",
       company: "Freelance",
       role: "Frontend Developer",
-      duration: "2024 - Present",
-      description: "Building high-performance websites with a focus on visual quality and smooth UX."
+      duration: "2024 - Present"
     }
   ],
   certificates: [
@@ -113,48 +114,6 @@ export const defaultContent: PortfolioContent = {
       id: "achievement-10",
       title: "Outstanding Award",
       image_url: "/images/achievements/outstanding-award.svg"
-    }
-  ],
-  activities: [
-    {
-      id: "activity-1",
-      title: "Campus Event",
-      image_url: "/images/achievements/academic-excellence.svg"
-    },
-    {
-      id: "activity-2",
-      title: "Web Workshop",
-      image_url: "/images/achievements/web-award.svg"
-    },
-    {
-      id: "activity-3",
-      title: "Data Session",
-      image_url: "/images/achievements/data-milestone.svg"
-    },
-    {
-      id: "activity-4",
-      title: "Project Day",
-      image_url: "/images/achievements/project-showcase.svg"
-    },
-    {
-      id: "activity-5",
-      title: "Hackathon",
-      image_url: "/images/achievements/hackathon-finalist.svg"
-    },
-    {
-      id: "activity-6",
-      title: "Creative Coding",
-      image_url: "/images/achievements/creative-coding.svg"
-    },
-    {
-      id: "activity-7",
-      title: "Certification",
-      image_url: "/images/achievements/certification-path.svg"
-    },
-    {
-      id: "activity-8",
-      title: "Community Work",
-      image_url: "/images/achievements/community-contribution.svg"
     }
   ],
   education: [

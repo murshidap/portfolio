@@ -149,7 +149,118 @@ function SkillTile({ active, skill }: { active: boolean; skill: SkillItem }) {
   );
 }
 
+function SkillsTimeline({ skills }: { skills: SkillItem[] }) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const skillItems = useMemo(
+    () => skills.filter((skill) => skill.title.trim() || skill.icon_url.trim()),
+    [skills]
+  );
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const sticky = section.querySelector<HTMLElement>("[data-skills-sticky]");
+    const viewport = section.querySelector<HTMLElement>("[data-skills-viewport]");
+    const track = section.querySelector<HTMLElement>("[data-skills-track]");
+    if (!sticky || !viewport || !track) {
+      return;
+    }
+
+    let travelDistance = 0;
+    let scrollDistance = 0;
+    let animationFrame = 0;
+    const getStickyTop = () => (window.matchMedia("(max-width: 767px)").matches ? 60 : 68);
+
+    const update = () => {
+      animationFrame = 0;
+      const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+      const progress = scrollDistance > 0
+        ? Math.min(1, Math.max(0, (window.scrollY - sectionTop + getStickyTop()) / scrollDistance))
+        : 0;
+      track.style.transform = `translate3d(${-travelDistance * progress}px, 0, 0)`;
+    };
+
+    const measure = () => {
+      track.style.transform = "translate3d(0, 0, 0)";
+      travelDistance = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      scrollDistance = travelDistance * 0.65;
+      sticky.style.height = `calc(100svh - ${getStickyTop()}px)`;
+      section.style.setProperty("--skills-scroll-height", `${sticky.offsetHeight + scrollDistance}px`);
+      section.dataset.enhanced = "true";
+      update();
+    };
+
+    const requestUpdate = () => {
+      if (animationFrame === 0) {
+        animationFrame = window.requestAnimationFrame(update);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(viewport);
+    resizeObserver.observe(track);
+    measure();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", measure);
+
+    return () => {
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", measure);
+      resizeObserver.disconnect();
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [skillItems.length]);
+
+  if (skillItems.length === 0) {
+    return null;
+  }
+
+  return (
+    <section ref={sectionRef} aria-label="Skills" className="skills-scroll-section relative w-full">
+      <div className="skills-scroll-sticky flex w-full flex-col justify-center overflow-hidden" data-skills-sticky>
+        <div className="skills-scroll-viewport relative w-full flex-1 overflow-hidden" data-skills-viewport>
+          <div className="skills-scroll-track relative flex h-full items-center" data-skills-track>
+            {skillItems.map((skill) => (
+              <article className="skills-scroll-item flex h-full w-[min(72vw,20rem)] shrink-0 flex-col items-start justify-center" key={skill.id}>
+                <SkillTile active skill={skill} />
+                <h2 className="mt-6 max-w-[18rem] font-baserona-bold text-[clamp(2rem,5vw,4rem)] leading-[0.95] text-zinc-950">
+                  {skill.title}
+                </h2>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .skills-scroll-section[data-enhanced] { height: var(--skills-scroll-height); }
+        .skills-scroll-sticky { height: auto; }
+        .skills-scroll-section[data-enhanced] .skills-scroll-sticky { position: sticky; top: 4.25rem; height: calc(100svh - 4.25rem); }
+        .skills-scroll-viewport { min-height: 26rem; }
+        .skills-scroll-track { gap: clamp(2rem, 7vw, 7rem); width: max-content; min-width: 100%; padding: 0 max(2rem, calc((100% - min(72vw, 20rem)) / 2)); will-change: transform; }
+        .skills-scroll-section:not([data-enhanced]) .skills-scroll-track { align-items: flex-start; flex-direction: column; gap: 2rem; height: auto; min-width: 0; width: 100%; padding: 2rem max(1.25rem, calc((100vw - 1180px) / 2)); transform: none !important; }
+        .skills-scroll-section:not([data-enhanced]) .skills-scroll-viewport { overflow: visible; }
+        .skills-scroll-section:not([data-enhanced]) .skills-scroll-item { width: min(100%, 20rem); }
+        @media (max-width: 767px) {
+          .skills-scroll-section[data-enhanced] .skills-scroll-sticky { top: 3.75rem; height: calc(100svh - 3.75rem); }
+          .skills-scroll-viewport { min-height: 22rem; }
+        }
+        @media (prefers-reduced-motion: reduce) { .skills-scroll-track { will-change: auto; } }
+      `}</style>
+    </section>
+  );
+}
+
 export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
+  return <SkillsTimeline skills={skills} />;
+}
+
+function LegacySkillsPage({ skills }: { skills: SkillItem[] }) {
   const skillItems = useMemo(
     () => skills.filter((skill) => skill.title.trim() || skill.icon_url.trim()),
     [skills]
@@ -224,12 +335,16 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
       return;
     }
 
+    if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) {
+      return;
+    }
+
     event.preventDefault();
 
-    const normalizedDeltaY =
-      event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * window.innerHeight : event.deltaY;
+    const normalizedDeltaX =
+      event.deltaMode === 1 ? event.deltaX * 16 : event.deltaMode === 2 ? event.deltaX * window.innerWidth : event.deltaX;
 
-    if (Math.abs(normalizedDeltaY) < skillWheelDeltaThreshold) {
+    if (Math.abs(normalizedDeltaX) < skillWheelDeltaThreshold) {
       return;
     }
 
@@ -257,7 +372,7 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
     }
 
     skillWheelLockRef.current = true;
-    setActiveSkillPosition((currentPosition) => Math.round(currentPosition) + (normalizedDeltaY > 0 ? 1 : -1));
+    setActiveSkillPosition((currentPosition) => Math.round(currentPosition) + (normalizedDeltaX > 0 ? 1 : -1));
 
     manualResumeTimeoutRef.current = window.setTimeout(() => {
       manualScrollActiveRef.current = false;
@@ -324,7 +439,7 @@ export default function SkillsPage({ skills }: { skills: SkillItem[] }) {
   return (
     <section
       ref={sectionRef}
-      className="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center overflow-hidden py-8"
+      className="flex min-h-[72vh] w-full flex-col justify-center overflow-hidden py-8"
       onTouchEnd={handleSkillTouchEnd}
       onTouchStart={handleSkillTouchStart}
     >

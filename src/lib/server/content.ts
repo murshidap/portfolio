@@ -17,16 +17,6 @@ function normalizeScreenshotUrls(value: unknown) {
   return [];
 }
 
-function normalizeActivities(items: PortfolioContent["activities"] | null | undefined) {
-  const sourceItems = items ?? defaultContent.activities;
-
-  return sourceItems.map((item, index) => ({
-    id: item?.id || `activity-${index + 1}`,
-    title: item?.title || `Activity ${index + 1}`,
-    image_url: item?.image_url || ""
-  }));
-}
-
 export async function fetchPortfolioContent(serverSide = false): Promise<PortfolioContent> {
   const supabase = serverSide ? getServiceSupabase() ?? getPublicServerSupabase() : getPublicServerSupabase();
   if (!supabase) {
@@ -40,7 +30,6 @@ export async function fetchPortfolioContent(serverSide = false): Promise<Portfol
     experienceResult,
     certificatesResult,
     achievementsResult,
-    activitiesResult,
     educationResult
   ] = await Promise.all([
     supabase.from("intro_content").select("*").limit(1).maybeSingle(),
@@ -49,7 +38,6 @@ export async function fetchPortfolioContent(serverSide = false): Promise<Portfol
     supabase.from("experience").select("*").order("display_order", { ascending: true }),
     supabase.from("certificates").select("*").order("display_order", { ascending: true }),
     supabase.from("achievements").select("*").order("display_order", { ascending: true }),
-    supabase.from("activities").select("*").order("display_order", { ascending: true }),
     supabase.from("education").select("*").order("display_order", { ascending: true })
   ]);
 
@@ -63,10 +51,13 @@ export async function fetchPortfolioContent(serverSide = false): Promise<Portfol
           screenshot_urls: normalizeScreenshotUrls(project.screenshot_urls)
         }))
       : defaultContent.projects,
-    experience: experienceResult.data ?? defaultContent.experience,
+    experience: experienceResult.data
+      ? experienceResult.data.map((item) =>
+          Object.fromEntries(Object.entries(item).filter(([key]) => key !== "description"))
+        )
+      : defaultContent.experience,
     certificates: certificatesResult.data ?? defaultContent.certificates,
     achievements: achievementsResult.data ?? defaultContent.achievements,
-    activities: normalizeActivities(activitiesResult.data),
     education: educationResult.data ?? defaultContent.education
   };
 }

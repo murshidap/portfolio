@@ -7,7 +7,7 @@ const initialContent = await fetchPortfolioContent();
 ---
 
 <PortfolioShell activeView="projects" intro={initialContent.intro} title="Projects">
-  <div class="relative z-0 flex min-h-0 flex-1 overflow-hidden">
+  <div class="relative z-0 flex min-h-0 flex-1 overflow-x-clip">
     <ProjectsPage client:load projects={initialContent.projects} />
   </div>
 </PortfolioShell>

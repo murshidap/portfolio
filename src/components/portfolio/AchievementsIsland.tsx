@@ -113,8 +113,8 @@ function AchievementCardBody({
   const useUploadedImage = shouldUseImage(item.image_url);
 
   return (
-    <article className="flex flex-col gap-3 text-white">
-      <div className="relative overflow-hidden rounded-md bg-white shadow-[0_14px_32px_rgba(0,0,0,0.16)]">
+    <article className="flex flex-col gap-3 text-zinc-950">
+      <div className="relative overflow-hidden rounded-md bg-white">
         {useUploadedImage ? (
           <img
             alt={item.title || "Achievement"}
@@ -212,7 +212,7 @@ export default function AchievementsIsland({ items }: { items: AchievementItem[]
               x: 0
             }}
             aria-label={`Show next achievement after ${activeAchievement.title || "current achievement"}`}
-            className="absolute w-[min(62vw,13rem)] cursor-pointer touch-pan-y focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-white sm:w-[13rem]"
+            className="absolute w-[min(62vw,13rem)] cursor-pointer touch-pan-y focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-zinc-950 sm:w-[13rem]"
             drag={achievements.length > 1 ? "x" : false}
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.18}

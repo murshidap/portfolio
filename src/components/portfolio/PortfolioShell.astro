@@ -4,55 +4,41 @@ import { DEFAULT_THEME_INDEX, PORTFOLIO_THEMES, getThemeStyle } from "@/componen
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import type { IntroContent } from "@/types/content";
 
-export type PortfolioView = "home" | "about" | "skills" | "projects" | "experience" | "certificates";
+export type PortfolioView = "home" | "about" | "projects" | "experience" | "certificates" | "gallery";
 
 interface Props {
   activeView: PortfolioView;
   intro: IntroContent;
   title: string;
+  removeBottomPadding?: boolean;
 }
 
-const { activeView, intro, title } = Astro.props;
-const showFadedRoleBackground = ["home", "about", "experience", "certificates"].includes(activeView);
-const showMobileSkillsBackground = activeView === "skills";
+const { activeView, intro, title, removeBottomPadding = false } = Astro.props;
+const showFadedRoleBackground = ["about", "experience", "certificates"].includes(activeView);
 const showGridBackground = activeView !== "experience";
 const fadedPositionClass = activeView === "about" ? "fixed" : "absolute";
 const roleWords = intro.role.trim() ? intro.role.trim().split(/\s+/) : ["Web", "Developer"];
-const lastRoleWord = roleWords[roleWords.length - 1].toUpperCase();
-const mobileOutlineWords = Array.from({ length: 24 }, () => lastRoleWord);
 const themeStyle = Object.entries(getThemeStyle(PORTFOLIO_THEMES[DEFAULT_THEME_INDEX]))
   .map(([key, value]) => `${key}: ${value}`)
   .join("; ");
 ---
 
 <BaseLayout title={`Murshida P. | ${title}`}>
-  <main class="theme-shell relative min-h-screen overflow-hidden text-zinc-950" style={themeStyle}>
+  <main class="theme-shell relative min-h-screen overflow-x-clip text-zinc-950" style={themeStyle}>
     {showGridBackground ? <div class="theme-hero-grid absolute inset-0"></div> : null}
     <div class="theme-hero-spotlight absolute inset-0 opacity-60"></div>
     <div class="theme-top-glow absolute inset-0 opacity-40"></div>
     {
       showFadedRoleBackground ? (
-        <div class:list={["pointer-events-none inset-0 overflow-hidden", activeView !== "home" && "hidden md:block", fadedPositionClass]}>
-          <div class:list={["font-faded-display pointer-events-none absolute left-1/2 z-0 flex w-max -translate-x-1/2 flex-col items-center text-center text-[clamp(6rem,22vw,20rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950/[0.035]", activeView === "home" ? "top-[4%] md:top-[12%]" : "top-[12%]"]}>
+        <div class:list={["pointer-events-none inset-0 overflow-hidden", fadedPositionClass]}>
+          <div class="font-faded-display pointer-events-none absolute left-1/2 top-[12%] z-0 flex w-max -translate-x-1/2 flex-col items-center text-center text-[clamp(6rem,22vw,20rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950/[0.035]">
             {roleWords.map((word) => <span class="block text-center">{word.toUpperCase()}</span>)}
-            {activeView === "home" ? mobileOutlineWords.map((word) => <span class="home-role-outline block text-center md:hidden">{word}</span>) : null}
           </div>
         </div>
       ) : null
     }
-    {
-      showMobileSkillsBackground ? (
-        <div class="pointer-events-none absolute inset-0 overflow-hidden md:hidden">
-          <div class="font-faded-display pointer-events-none absolute left-1/2 top-[4%] z-0 flex w-max -translate-x-1/2 flex-col items-center text-center text-[clamp(6rem,22vw,20rem)] font-black leading-[0.82] tracking-[0.02em] text-zinc-950/[0.035]">
-            <span class="block text-center">SKILLS</span>
-            {Array.from({ length: 24 }, () => <span class="home-role-outline block text-center">SKILLS</span>)}
-          </div>
-        </div>
-      ) : null
-    }
-
-    <div class="relative z-10 mx-auto flex min-h-screen max-w-[1600px] flex-col px-5 pb-8 pt-5 md:px-8 md:pt-6 lg:px-10 xl:px-16">
-      <header class="relative z-[60] flex flex-wrap items-center justify-between gap-x-8 gap-y-4 py-1 text-zinc-800 md:py-3">
+    <div class:list={["relative z-10 flex min-h-screen w-full flex-col", !removeBottomPadding && "pb-8"]}>
+      <header class="sticky top-0 z-[60] flex flex-wrap items-center justify-between gap-x-8 gap-y-4 bg-white px-5 py-3 text-zinc-800 md:px-8 md:py-4 lg:px-10 xl:px-16" data-primary-header data-section-tone="light">
         <PrimaryNavigation activeView={activeView} client:load intro={intro} />
       </header>
 
@@ -60,3 +46,31 @@ const themeStyle = Object.entries(getThemeStyle(PORTFOLIO_THEMES[DEFAULT_THEME_I
     </div>
   </main>
 </BaseLayout>
+
+<script>
+  const revealSections = document.querySelectorAll<HTMLElement>("[data-scroll-reveal]");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if ("IntersectionObserver" in window && !reduceMotion) {
+    const observer = new IntersectionObserver(
+      (entries, currentObserver) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-scroll-reveal", "visible");
+            currentObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -8% 0px" }
+    );
+
+    revealSections.forEach((section) => {
+      if (section.getBoundingClientRect().top < window.innerHeight * 0.9) {
+        section.setAttribute("data-scroll-reveal", "visible");
+      } else {
+        section.setAttribute("data-scroll-reveal", "hidden");
+        observer.observe(section);
+      }
+    });
+  }
+</script>

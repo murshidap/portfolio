@@ -1,47 +1,13 @@
 ---
-import AchievementsIsland from "@/components/portfolio/AchievementsIsland";
-import AboutGalleryWheel from "@/components/portfolio/AboutGalleryWheel";
-import AboutIntro from "@/components/portfolio/AboutIntro";
-import type { PortfolioContent } from "@/types/content";
+import AboutSpeechBubble from "@/components/portfolio/AboutSpeechBubble";
+import type { IntroContent } from "@/types/content";
 
 interface Props {
-  content: PortfolioContent;
+  intro: IntroContent;
 }
 
-const { content } = Astro.props;
-const introParagraphs = content.intro.intro.split(/\n\s*\n/).filter(Boolean);
+const { intro } = Astro.props;
+const introParagraphs = intro.intro.split(/\n\s*\n/).filter(Boolean);
 ---
 
-<section class="-mx-3 -mt-4 min-h-0 w-[calc(100%+1.5rem)] max-w-[1600px] flex-1 overflow-y-auto overflow-x-hidden pt-6 pb-10 sm:mx-auto sm:mt-0 sm:w-full sm:py-10">
-  <div class="mx-auto w-full max-w-[1180px]">
-    <div class="grid gap-4 rounded-xl bg-zinc-950/90 px-6 pb-6 pt-2 text-white shadow-[0_18px_48px_rgba(0,0,0,0.18)] sm:gap-8 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.52fr)] lg:items-center">
-      <div class="-mt-3 order-2 lg:order-1 lg:mt-0">
-        <AboutIntro client:load paragraphs={introParagraphs} />
-      </div>
-
-      <div class="order-3 mt-4 border-t border-white/20 pt-4 lg:col-span-2 lg:order-3 lg:mt-8 lg:pt-6">
-        <h2 class="font-display text-2xl leading-none text-white">Education</h2>
-
-        <ul class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {
-            content.education.map((item) => (
-              <li>
-                <h3 class="text-base font-semibold uppercase leading-tight text-white">{item.degree}</h3>
-                <p class="mt-1 text-sm font-medium uppercase leading-tight text-white/85">{item.institution}</p>
-                <p class="mt-1 text-sm leading-6 text-white/65">{item.duration}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-
-      <div class="order-1 mx-auto w-full max-w-[22rem] lg:order-2">
-        <AchievementsIsland client:visible items={content.achievements} />
-      </div>
-    </div>
-
-    <div class="mt-10">
-      <AboutGalleryWheel client:load items={content.activities} />
-    </div>
-  </div>
-</section>
+<AboutSpeechBubble client:load paragraphs={introParagraphs} />

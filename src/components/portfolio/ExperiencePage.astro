@@ -10,25 +10,282 @@ const { items } = Astro.props;
 
 {
   items.length === 0 ? (
-    <section class="mx-auto flex min-h-[72vh] w-full max-w-[1120px] flex-col justify-center py-10">
-      <p class="text-sm text-zinc-600">No experience entries yet.</p>
-    </section>
+    <div class="flex min-h-[72vh] w-full flex-col justify-center py-10">
+      <p class="text-sm text-white/65">No experience entries yet.</p>
+    </div>
   ) : (
-    <section class="flex min-h-full w-full flex-col items-center overflow-x-hidden overflow-y-auto py-10 md:flex-row md:overflow-x-auto md:overflow-y-hidden">
-      <div class="flex w-full flex-col items-center gap-6 px-4 md:w-max md:flex-row md:gap-8 md:px-[max(1rem,calc((100vw-1180px)/2))]">
-        {items.map((item) => (
-          <article class="flex h-[18rem] w-[min(100%,32rem)] shrink-0 flex-col justify-between overflow-hidden rounded-[1.5rem] border border-white/12 bg-black/[0.78] p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-3xl md:h-[clamp(21rem,34vw,28rem)] md:w-[clamp(17rem,28vw,23rem)] md:p-8">
-            <div>
-              <h3 class="text-[clamp(1rem,1.8vw,1.65rem)] font-semibold uppercase leading-tight tracking-normal text-white">
-                {item.role}
-              </h3>
-              <p class="mt-4 text-[clamp(0.8rem,1.25vw,1.05rem)] font-semibold leading-tight text-zinc-100">{item.company}</p>
-              <p class="mt-1 text-[clamp(0.75rem,1.1vw,0.95rem)] font-medium leading-tight text-zinc-300">{item.duration}</p>
-            </div>
-            <p class="max-h-[7.5rem] overflow-hidden text-sm leading-6 text-zinc-300">{item.description}</p>
-          </article>
-        ))}
+    <div
+      aria-label="Work experience timeline"
+      class="experience-timeline relative w-full"
+      data-experience-timeline
+      role="region"
+    >
+      <div class="experience-sticky flex w-full flex-col justify-center overflow-hidden">
+        <div class="experience-viewport relative w-full flex-1 overflow-hidden" data-experience-viewport>
+          <div class="experience-track relative flex h-full items-start" data-experience-track>
+            <svg
+              aria-hidden="true"
+              class="experience-connector pointer-events-none absolute inset-0 h-full overflow-visible"
+              data-experience-connector
+              preserveAspectRatio="none"
+            >
+              <path
+                class="experience-connector-base"
+                d="M 0 42 H 1000"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                class="experience-connector-progress"
+                d="M 0 42 H 1000"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              />
+            </svg>
+
+            {
+              items.map((item, index) => (
+                <article
+                  class:list={[
+                    "experience-item relative h-full shrink-0",
+                    index % 2 === 0 ? "is-above" : "is-below"
+                  ]}
+                  data-experience-item
+                >
+                  <span
+                    aria-hidden="true"
+                    class="experience-marker absolute left-0 top-[2.1rem] z-10 grid h-4 w-4 -translate-x-1/2 place-items-center rounded-full border-2 border-white bg-zinc-950 shadow-[0_0_0_5px_rgba(9,9,11,0.72)]"
+                  >
+                    <span class="h-1.5 w-1.5 rounded-full bg-white" />
+                  </span>
+                  <div class="experience-entry max-w-[18rem] border-l border-white/35 pl-5 sm:pl-6">
+                    <h3 class="text-[clamp(1.45rem,2.4vw,2.35rem)] font-semibold leading-[0.95] tracking-[-0.055em] text-white">
+                      {item.role}
+                    </h3>
+                    <p class="mt-3 text-sm font-medium text-white/80 sm:text-base">{item.company}</p>
+                    <p class="mt-2 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-white/55">
+                      {item.duration}
+                    </p>
+                  </div>
+                </article>
+              ))
+            }
+          </div>
+        </div>
       </div>
-    </section>
+    </div>
   )
 }
+
+<style>
+  .experience-sticky {
+    height: auto;
+  }
+
+  .experience-timeline[data-enhanced] {
+    height: var(--experience-scroll-height);
+  }
+
+  .experience-timeline[data-enhanced] .experience-sticky {
+    position: sticky;
+    top: 4.25rem;
+    height: calc(100svh - 4.25rem);
+  }
+
+  .experience-viewport {
+    min-height: 28rem;
+  }
+
+  .experience-track {
+    gap: 1.5rem;
+    width: max-content;
+    min-width: 100%;
+    padding-left: max(2rem, calc((100% - min(82vw, 23rem)) / 2));
+    padding-right: max(2rem, calc((100% - min(82vw, 23rem)) / 2));
+    will-change: transform;
+  }
+
+  .experience-item {
+    width: min(82vw, 23rem);
+    padding-top: 0.1rem;
+  }
+
+  .experience-timeline[data-enhanced] .experience-entry {
+    position: absolute;
+    left: 0;
+  }
+
+  .experience-timeline[data-enhanced] .is-above .experience-entry {
+    bottom: calc(50% + 3.7rem);
+  }
+
+  .experience-timeline[data-enhanced] .is-below .experience-entry {
+    top: calc(50% + 3.7rem);
+  }
+
+  .experience-connector {
+    color: rgba(255, 255, 255, 0.28);
+  }
+
+  .experience-connector-progress {
+    color: #ffffff;
+  }
+
+  .experience-timeline:not([data-enhanced]) .experience-track {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    height: auto;
+    min-width: 0;
+    width: 100%;
+    padding: 1rem max(1.25rem, calc((100vw - 1180px) / 2));
+    transform: none !important;
+  }
+
+  .experience-timeline:not([data-enhanced]) .experience-viewport {
+    overflow: visible;
+  }
+
+  .experience-timeline:not([data-enhanced]) .experience-connector,
+  .experience-timeline:not([data-enhanced]) .experience-marker {
+    display: none;
+  }
+
+  .experience-timeline:not([data-enhanced]) .experience-item {
+    width: min(100%, 32rem);
+  }
+
+  .experience-timeline:not([data-enhanced]) .experience-entry {
+    margin-top: 0;
+    position: static;
+  }
+
+  @media (max-width: 767px) {
+    .experience-timeline[data-enhanced] .experience-sticky {
+      top: 3.75rem;
+      height: calc(100svh - 3.75rem);
+    }
+
+    .experience-entry {
+      max-width: 16rem;
+    }
+
+    .experience-viewport {
+      min-height: 25rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .experience-track {
+      will-change: auto;
+    }
+  }
+</style>
+
+<script>
+  const timelines = document.querySelectorAll<HTMLElement>("[data-experience-timeline]");
+
+  timelines.forEach((timeline) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const sticky = timeline.querySelector<HTMLElement>(".experience-sticky");
+    const viewport = timeline.querySelector<HTMLElement>("[data-experience-viewport]");
+    const track = timeline.querySelector<HTMLElement>("[data-experience-track]");
+    const connector = timeline.querySelector<SVGSVGElement>("[data-experience-connector]");
+    const paths = connector?.querySelectorAll<SVGPathElement>("path");
+
+    if (!sticky || !viewport || !track || !connector || !paths?.length) {
+      return;
+    }
+
+    let travelDistance = 0;
+    let scrollDistance = 0;
+    let connectorLength = 0;
+    let animationFrame = 0;
+
+    const getStickyTop = () => window.matchMedia("(max-width: 767px)").matches ? 60 : 68;
+
+    const measure = () => {
+      track.style.transform = "translate3d(0, 0, 0)";
+      travelDistance = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      scrollDistance = travelDistance * 0.65;
+      sticky.style.height = `calc(100svh - ${getStickyTop()}px)`;
+      const stackDistance = window.innerHeight;
+      timeline.style.setProperty("--experience-scroll-height", `${sticky.offsetHeight + scrollDistance + stackDistance}px`);
+      document.documentElement.style.setProperty("--experience-stack-distance", `${stackDistance}px`);
+      const experienceSection = timeline.closest("#experience") as HTMLElement | null;
+      if (experienceSection) {
+        experienceSection.dataset.enhanced = "true";
+      }
+      connector.setAttribute("viewBox", `0 0 ${track.scrollWidth} ${viewport.clientHeight}`);
+
+      const items = track.querySelectorAll<HTMLElement>("[data-experience-item]");
+      const firstMarker = items[0]?.offsetLeft ?? 0;
+      const lastMarker = items[items.length - 1]?.offsetLeft ?? firstMarker;
+      const span = Math.max(1, lastMarker - firstMarker);
+      const centerY = viewport.clientHeight / 2;
+      const waveHeight = Math.min(34, Math.max(20, viewport.clientHeight * 0.075));
+      const waveCycles = Math.max(1.25, (items.length - 1) * 0.75);
+      const pointY = (x: number) => centerY + waveHeight * Math.sin(((x - firstMarker) / span) * Math.PI * 2 * waveCycles);
+      connector.style.width = `${track.scrollWidth}px`;
+
+      const pointCount = Math.max(48, Math.ceil(span / 12));
+      const curvePoints = Array.from({ length: pointCount + 1 }, (_, pointIndex) => {
+        const x = firstMarker + (span * pointIndex) / pointCount;
+        return `${x.toFixed(2)} ${pointY(x).toFixed(2)}`;
+      });
+      const pathData = `M ${curvePoints.join(" L ")}`;
+
+      items.forEach((item) => {
+        const marker = item.querySelector<HTMLElement>(".experience-marker");
+        if (marker) {
+          marker.style.top = `${pointY(item.offsetLeft) - marker.offsetHeight / 2}px`;
+        }
+      });
+
+      paths.forEach((path) => {
+        path.setAttribute("d", pathData);
+        connectorLength = path.getTotalLength();
+        path.style.strokeDasharray = `${connectorLength}`;
+        path.style.strokeDashoffset = path === paths[1] ? `${connectorLength}` : "0";
+      });
+
+      timeline.dataset.enhanced = "true";
+      update();
+    };
+
+    const update = () => {
+      animationFrame = 0;
+      const stickyTop = getStickyTop();
+      const sectionTop = timeline.getBoundingClientRect().top + window.scrollY;
+      const progress = scrollDistance > 0
+        ? Math.min(1, Math.max(0, (window.scrollY - sectionTop + stickyTop) / scrollDistance))
+        : 0;
+
+      track.style.transform = `translate3d(${-travelDistance * progress}px, 0, 0)`;
+      paths?.forEach((path) => {
+        if (path === paths[1]) {
+          path.style.strokeDashoffset = `${connectorLength * (1 - progress)}`;
+        }
+      });
+    };
+
+    const requestUpdate = () => {
+      if (animationFrame === 0) {
+        animationFrame = window.requestAnimationFrame(update);
+      }
+    };
+
+    measure();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", measure);
+
+    const resizeObserver = new ResizeObserver(measure);
+    resizeObserver.observe(viewport);
+    resizeObserver.observe(track);
+  });
+</script>
