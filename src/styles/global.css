@@ -361,12 +361,42 @@ textarea {
 }
 
 [data-primary-header] {
-  transition: background-color 220ms ease, color 220ms ease;
+  isolation: isolate;
+  transition: color 220ms ease;
+}
+
+[data-primary-header]::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: #09090b;
+  content: "";
+  clip-path: inset(100% 0 0);
+  pointer-events: none;
+  transition: clip-path 220ms ease;
+}
+
+[data-primary-header] > * {
+  position: relative;
+  z-index: 1;
 }
 
 [data-primary-header][data-section-tone="dark"] {
-  background: #09090b;
+  background: transparent;
   color: #ffffff;
+}
+
+[data-primary-header][data-section-tone="dark"]::before {
+  clip-path: inset(0);
+}
+
+[data-primary-header][data-tone-transition="light"]::before {
+  clip-path: inset(0 0 100%);
+}
+
+[data-primary-header][data-tone-transition="reset"]::before {
+  clip-path: inset(100% 0 0);
+  transition: none;
 }
 
 [data-primary-header][data-section-tone="dark"] .font-open-sans-light,
@@ -386,6 +416,13 @@ textarea {
 
 [data-primary-header][data-section-tone="dark"] .text-zinc-500 {
   color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 767px) {
+  [data-primary-header][data-section-tone="dark"] #primary-navigation-panel {
+    background: #09090b;
+    color: #ffffff;
+  }
 }
 
 .home-role-outline {
@@ -669,18 +706,36 @@ textarea {
 }
 
 @media (max-width: 767px) {
+  .about-speech-stage {
+    position: sticky;
+    top: 3.75rem;
+    height: auto;
+    padding: 1.25rem 1rem 2rem;
+  }
+
   .about-speech-bubble {
-    top: 30svh;
-    right: 3vw;
-    width: min(48vw, 13rem);
-    height: 62svh;
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    height: auto;
     min-height: 0;
     padding: 1rem;
     border-radius: 1rem;
   }
 
+  .about-speech-tail {
+    top: -0.75rem;
+    left: 1.5rem;
+    width: 1.5rem;
+    height: 0.75rem;
+    clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  }
+
   .about-speech-copy {
     gap: 0.75rem;
+    min-height: auto;
+    overflow-y: visible;
     font-size: 0.82rem;
     line-height: 1.65;
   }
@@ -719,7 +774,7 @@ textarea {
   }
 
   .certificate-timeline-tick-mark {
-    width: 0.65rem;
+    display: none;
   }
 
   .certificate-timeline-tick-label {

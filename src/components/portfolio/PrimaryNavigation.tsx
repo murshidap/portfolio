@@ -71,8 +71,57 @@ export default function PrimaryNavigation({
 
   useEffect(() => {
     const header = document.querySelector<HTMLElement>("[data-primary-header]");
-    header?.setAttribute("data-section-tone", currentView === "experience" || currentView === "gallery" ? "dark" : "light");
-  }, [currentView]);
+    if (!header) {
+      return;
+    }
+
+    let animationFrame = 0;
+    let toneResetTimeout = 0;
+    let previousTone = header.getAttribute("data-section-tone") ?? "light";
+    const updateSectionTone = () => {
+      animationFrame = 0;
+      const toneCheckY = Math.min(window.innerHeight - 1, Math.ceil(header.getBoundingClientRect().bottom));
+      const sectionBelowHeader = document
+        .elementFromPoint(window.innerWidth / 2, toneCheckY)
+        ?.closest<HTMLElement>("#experience, #gallery");
+      const nextTone = sectionBelowHeader ? "dark" : "light";
+
+      if (nextTone === previousTone) {
+        return;
+      }
+
+      window.clearTimeout(toneResetTimeout);
+      header.removeAttribute("data-tone-transition");
+      header.setAttribute("data-section-tone", nextTone);
+
+      if (nextTone === "light") {
+        header.setAttribute("data-tone-transition", "light");
+        toneResetTimeout = window.setTimeout(() => {
+          header.setAttribute("data-tone-transition", "reset");
+        }, 240);
+      }
+
+      previousTone = nextTone;
+    };
+    const scheduleUpdate = () => {
+      if (animationFrame === 0) {
+        animationFrame = window.requestAnimationFrame(updateSectionTone);
+      }
+    };
+
+    updateSectionTone();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.clearTimeout(toneResetTimeout);
+      if (animationFrame !== 0) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, []);
 
   useEffect(() => () => {
     window.cancelAnimationFrame(scrollAnimationRef.current);

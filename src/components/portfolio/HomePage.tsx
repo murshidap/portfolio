@@ -79,7 +79,7 @@ export default function HomePage({ intro, skills }: { intro: IntroContent; skill
               />
               <div
                 aria-hidden="true"
-                className="h-px w-full bg-gradient-to-r from-transparent via-black/95 to-transparent md:hidden"
+                className="-mt-px h-[2px] w-full bg-gradient-to-r from-transparent via-zinc-700/90 to-transparent shadow-[0_0_0_1px_rgba(24,24,27,0.03)]"
               />
             </div>
           </div>
